@@ -1,0 +1,4 @@
+# Don't track settings document
+settings.py
+.DS_Store
+*.pyc
