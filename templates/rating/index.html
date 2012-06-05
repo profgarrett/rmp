@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block content %}
+
+
+
+{% if username %}
+<h1>Hello</h1>
+	
+	Your name is {{ username }}<br/>
+	
+	<a href='/logout'>Logout</a>
+{% else %}
+	You are not logged in.
+{% endif %}
+
+
+{% endblock %}

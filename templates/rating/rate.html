@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+
+<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+
+
+
+<script type="text/javascript">
+// Using JQuery selectors to add onFocus and onBlur event handlers
+
+$(document).ready( function() {
+
+  // Add the "focus" value to class attribute
+  $('ul.radio li').focusin( function() {
+    $(this).addClass('focus');
+  }
+  );
+
+  // Remove the "focus" value to class attribute
+  $('ul.radio li').focusout( function() {
+    $(this).removeClass('focus');
+  }
+  );
+
+	// Remove selected option
+	$("input[type='radio']").attr('checked',false).each(function(e){
+		$this = $(this)
+		if ($this.attr('value') == 0) {
+			$this.attr('checked', true)
+		}
+	});
+	
+	//$(".radioNA").attr('checked',true)
+
+	// Make li select value box.
+	$("li").mousedown(function(e){
+		ck = $(this).find('input')
+		ck.attr('checked', true);
+	})
+
+});
+
+</script>
+
+<style type="text/css">
+
+img {
+	width: 500px;
+	border: solid 2px black;
+	float: all;
+	margin: 10px;
+}
+
+fieldset.radiogroup  {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 1.25em;
+  padding: .125em;
+}
+
+fieldset.radiogroup legend {
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  margin-left: 20px;
+  font-size: 100%;
+  color: black;
+}
+
+ul.radio  {
+  margin: 0;
+  padding: 0;
+  margin-left: 20px;
+  list-style: none;
+}
+
+ul.radio li {
+  border: 1px transparent solid;
+}
+
+ul.radio li:hover,
+ul.radio li.focus  {
+  background-color: lightyellow;
+  border: 1px gray solid;
+  width: 80%;
+}
+
+b {
+	font-size: 145%;
+}
+  </style>
+
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Rate Presentation {{ ppt.pk }}</h1>
+
+
+<form action="rate" method="post">{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Submit" />
+</form>
+
+
+
+
+{% for jpg in jpgs  %}
+<img src="{{ jpg }}" />
+{% endfor %}
+
+
+{% endblock %}

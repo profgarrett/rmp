@@ -1,5 +1,5 @@
 # Don't track settings document
-settings.py # settings documen
 .DS_Store
-*.pyc # compiled python
-*.swp # MacVim swap file
+*.pyc
+*.swp
+local_settings.py
