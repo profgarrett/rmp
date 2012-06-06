@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+
+<style type="text/css">
+
+img {
+	width: 400px;
+	border: solid 2px black;
+	float: all;
+	margin: 10px;
+}
+
+fieldset.radiogroup  {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 1.25em;
+  padding: .125em;
+}
+
+#ratingform legend {
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  margin-left: 20px;
+  font-size: 100%;
+  color: black;
+}
+
+#ratingform ul {
+  margin: 0;
+  padding: 0;
+  margin-left: 20px;
+  list-style: none;
+}
+
+#ratingform > ul > li > ul > li {
+  border: 1px transparent solid;
+}
+
+#ratingform > ul > li > ul> li:hover, #ratingform >ul > li> ul> li.focus  {
+  background-color: lightyellow;
+  border: 1px gray solid;
+  width: 80%;
+}
+
+b {
+	font-size: 145%;
+}
+
+#ratingul > li {
+	width: 450px;
+	background-color: lightgray;
+	border: solid 1px black;
+	margin: 5px;
+	padding: 5px;
+	float: left;
+}
+
+#ratingsubmit {
+	padding: 10px;
+	text-align: center;
+	clear: both;
+}
+#ratingsubmit input {
+	font-size: 150%;
+}
+
+  </style>
+
+
+{% endblock %}
+
+{% block content %}
+
+<h1>View Presentation {{ ppt.pk }}</h1>
+
+{% for rating in ratings %}
+	<div>User {{ rating.user_id }} rated {{ rating.ppt_id }} presentation on {{ rating.ratedate }}
+	Lengend: 1, Strongly Agree, 2 is Agree, 3 is Neutral, 4 is Disagree, 5 is Strongly Disagree
+	</div>
+	<ul>
+		<li>These slides have a lot of images {{ rating.contentimage }}</br>
+		<li>These slides have a lot of text {{ rating.contenttext }}</br>
+		<li>These slides would help me stay interested during class {{ rating.slidenovel }}</br>
+		<li>These slides would help me prepare for class or study for tests {{ rating.slidestudy }}</br>
+		<li>These slides are professional quality {{ rating.slidequality }}</br>
+		<li>These slides are interesting {{ rating.slideinteresting }}</br>
+	</ul>
+{% endfor %}
+
+{% for jpg in jpgs  %}
+<img src="{{ jpg }}" />
+{% endfor %}
+
+
+{% endblock %}

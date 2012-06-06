@@ -20,7 +20,7 @@ urlpatterns = patterns('',
 	url(r'^$', 'rating.views.index'),
 	
 	url(r'^ppt/random$', 'rating.views.gotorandom'),
-	#url(r'^ppt/(?P<ppt_id>\d+)\$', 'rating.views.view'),
+	url(r'^ppt/(?P<ppt_id>\d+)/$', 'rating.views.view'),
 	url(r'^ppt/(?P<ppt_id>\d+)/rate$', 'rating.views.rate'),
 	url(r'^ppt/(?P<folder>\d+)/jpg/(?P<filename>\w+)\.JPG$', 'rating.views.jpg'),
 )

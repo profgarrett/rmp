@@ -18,7 +18,15 @@ from rating.forms import *
 @login_required
 def index(request):
 	user = request.user
-	return render_to_response('rating/index.html', { 'username': user.username } )
+	
+	ratings = PptRating.objects.filter(user__username=user).order_by('-ratedate')
+	
+	return render_to_response('rating/index.html', 
+			{	'username': user.username,
+				'count': ratings.count(),
+				'ratings': ratings.all()
+			},
+			context_instance=RequestContext(request))
 
 
 @login_required
@@ -37,6 +45,33 @@ def gotorandom(request):
 
 
 
+@login_required
+def view(request, ppt_id):
+	ppt = get_object_or_404(Ppt, pk=ppt_id)
+	
+	# If me, then show all ratings.  Otherwise, shown own ratings.
+	if request.user.username == 'garrettn':
+		ratings = PptRating.objects.filter(ppt_id=ppt.id)
+	else:
+		ratings = PptRating.objects.filter(ppt_id=ppt.id).filter(user__username=request.user.username)
+	
+	# refactor out jpg access
+	jpg = settings.PPT_FILEPATH + ppt.folder + '/jpg/'
+	if not os.path.exists(jpg):
+		return HttpResponse('No images for given ppt in ' + jpg)
+	
+	jpgs = []
+	for j in os.listdir(jpg):
+		if j[-3:] == 'JPG': jpgs.append('/ppt/'+ppt.folder+'/jpg/'+j)
+	
+	return render_to_response('rating/view.html', 
+			{	'username': request.user.username,
+				'jpgs': jpgs,
+				'ppt': ppt,
+				'ratings': ratings.all()
+			},
+			context_instance=RequestContext(request))
+
 
 @login_required
 def rate(request, ppt_id):
@@ -54,6 +89,7 @@ def rate(request, ppt_id):
 			return HttpResponseRedirect('/')
 	else:
 		
+		# refactor out jpg access
 		jpg = settings.PPT_FILEPATH + ppt.folder + '/jpg/'
 		if not os.path.exists(jpg):
 			return HttpResponse('No images for given ppt in ' + jpg)

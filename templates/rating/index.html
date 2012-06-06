@@ -10,7 +10,14 @@
 	
 	Your name is {{ username }}<br/>
 	
-	<a href='/logout'>Logout</a>
+	You have rated {{ count }} presentations.  <a href='/ppt/random'>Rate another!</a>
+	
+	<ul>
+	{% for rating in ratings %}
+	<li><a href='/ppt/{{ rating.ppt_id }}'>{{ rating.ppt_id}} rated on {{ rating.ratedate }}</a></li>
+	{% endfor %}
+	</ul>
+
 {% else %}
 	You are not logged in.
 {% endif %}

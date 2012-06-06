@@ -63,5 +63,5 @@ class PptRating(models.Model):
 	ppt = models.ForeignKey(Ppt)
 	
 	def __unicode__(self):
-		return "<PptRating ('%s', '%s', '%s', '%s', '%s' )" % (self.id, self.user, self.ppt)
+		return "<PptRating ('%s', '%s', '%s' )" % (self.id, self.user, self.ppt)
 

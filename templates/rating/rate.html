@@ -35,7 +35,7 @@ $(document).ready( function() {
 	//$(".radioNA").attr('checked',true)
 
 	// Make li select value box.
-	$("li").mousedown(function(e){
+	$("#ratingul > li > ul > li").mousedown(function(e){
 		ck = $(this).find('input')
 		ck.attr('checked', true);
 	})
@@ -47,7 +47,7 @@ $(document).ready( function() {
 <style type="text/css">
 
 img {
-	width: 500px;
+	width: 400px;
 	border: solid 2px black;
 	float: all;
 	margin: 10px;
@@ -60,7 +60,7 @@ fieldset.radiogroup  {
   padding: .125em;
 }
 
-fieldset.radiogroup legend {
+#ratingform legend {
   margin: 0;
   padding: 0;
   font-weight: bold;
@@ -69,19 +69,18 @@ fieldset.radiogroup legend {
   color: black;
 }
 
-ul.radio  {
+#ratingform ul {
   margin: 0;
   padding: 0;
   margin-left: 20px;
   list-style: none;
 }
 
-ul.radio li {
+#ratingform > ul > li > ul > li {
   border: 1px transparent solid;
 }
 
-ul.radio li:hover,
-ul.radio li.focus  {
+#ratingform > ul > li > ul> li:hover, #ratingform >ul > li> ul> li.focus  {
   background-color: lightyellow;
   border: 1px gray solid;
   width: 80%;
@@ -90,6 +89,25 @@ ul.radio li.focus  {
 b {
 	font-size: 145%;
 }
+
+#ratingul > li {
+	width: 450px;
+	background-color: lightgray;
+	border: solid 1px black;
+	margin: 5px;
+	padding: 5px;
+	float: left;
+}
+
+#ratingsubmit {
+	padding: 10px;
+	text-align: center;
+	clear: both;
+}
+#ratingsubmit input {
+	font-size: 150%;
+}
+
   </style>
 
 
@@ -100,17 +118,22 @@ b {
 <h1>Rate Presentation {{ ppt.pk }}</h1>
 
 
-<form action="rate" method="post">{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" value="Submit" />
-</form>
-
-
-
-
 {% for jpg in jpgs  %}
 <img src="{{ jpg }}" />
 {% endfor %}
+
+
+<form id='ratingform' action="rate" method="post">
+	{% csrf_token %}
+	<ul id='ratingul'>
+	{{ form.as_ul }}
+	</ul>
+<div id='ratingsubmit'>
+	<input  type="submit" value="Save Rating" />
+</div>
+</form>
+
+
 
 
 {% endblock %}
