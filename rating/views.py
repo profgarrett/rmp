@@ -58,7 +58,7 @@ def view(request, ppt_id):
 	# refactor out jpg access
 	jpg = settings.PPT_FILEPATH + ppt.folder + '/jpg/'
 	if not os.path.exists(jpg):
-		return HttpResponse('No images for given ppt in ' + jpg)
+		return HttpResponse('No images for this presentation')
 	
 	jpgs = []
 	for j in os.listdir(jpg):
@@ -92,7 +92,19 @@ def rate(request, ppt_id):
 		# refactor out jpg access
 		jpg = settings.PPT_FILEPATH + ppt.folder + '/jpg/'
 		if not os.path.exists(jpg):
-			return HttpResponse('No images for given ppt in ' + jpg)
+			p = PptRating()
+			p.user_id = request.user.id
+			p.ppt_id = ppt_id
+			p.empty = 1
+			p.contentimage = 0
+			p.contenttext = 0
+			p.slidenovel = 0
+			p.slidestudy = 0
+			p.slidequality = 0
+			p.slideinteresting = 0
+			
+			p.save()
+			return HttpResponseRedirect('/ppt/random')
 		
 		jpgs = []
 		for j in os.listdir(jpg):
