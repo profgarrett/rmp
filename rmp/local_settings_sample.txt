@@ -1,0 +1,67 @@
+# Django Options
+
+# Note that this file is read by the C# application unpacker 
+# to get connection string values. Do not change the line numbers
+# or formatting below. It should always be on line 7,8, 9, and 10
+
+DB_HOST = ''
+DB_USER = ''
+DB_NAME = ''
+DB_PORT = ''
+DB_PASSWORD = ''
+
+
+
+# Normal settings
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': DB_NAME,                      # Or path to database file if using sqlite3.
+        'USER': DB_USER,                      # Not used with sqlite3.
+        'PASSWORD': DB_PASSWORD,                  # Not used with sqlite3.
+        'HOST': DB_HOST,                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    }
+}
+
+URL_ROOT = 'http://rmp.com/'
+ROOT = 'e:/rmp/'
+PPT_FILEPATH = 'e:/loaded/'
+
+# Absolute filesystem path to the directory that will hold user-uploaded files.
+# Example: "/home/media/media.lawrence.com/media/"
+MEDIA_ROOT = ROOT + 'userfiles'
+
+# URL that handles the media served from MEDIA_ROOT. Make sure to use a
+# trailing slash.
+# Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
+MEDIA_URL = ROOT + 'media'
+
+# Absolute path to the directory static files should be collected to.
+# Don't put anything in this directory yourself; store your static files
+# in apps' "static/" subdirectories and in STATICFILES_DIRS.
+# Example: "/home/media/media.lawrence.com/static/"
+STATIC_ROOT = ROOT + 'static/' 
+
+# URL prefix for static files.
+# Example: "http://media.lawrence.com/static/"
+STATIC_URL = '/static/'
+
+# Additional locations of static files
+STATICFILES_DIRS = (
+	ROOT + 'admin_static',
+)
+
+# Make this unique, and don't share it with anybody.
+SECRET_KEY = '<MAKE YOUR OWN KEY HERE>'
+
+TEMPLATE_DIRS = (
+	# Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+	# Always use forward slashes, even on Windows.
+	# Don't forget to use absolute paths, not relative paths.
+	ROOT + 'templates',
+)
+

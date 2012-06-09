@@ -1,10 +1,6 @@
-import djcelery
 # Django settings for rmp project.
 
-djcelery.setup_loader()
-BROKER_URL = ""
-
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -124,7 +120,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.admindocs',
-    'djcelery',
     'rating'
 )
 
