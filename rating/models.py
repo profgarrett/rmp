@@ -18,18 +18,42 @@ if False:
 		def __unicode__(self):
 			return "<Unit %s, %s,%s>" % (self.id, self.title, self.unittype)
 
-
 class Ppt(models.Model):
 	filename = models.CharField(max_length=240)
 	folder = models.CharField(max_length=240)
 	rnd = models.IntegerField()
 	source_url = models.TextField()
 	
-	#unit = models.ForeignKey(Unit)
+	unit_id = models.IntegerField() #models.ForeignKey(Unit)
 	user = models.ForeignKey(User)
 	
 	def __unicode__(self):
 		return "<Ppt %s, %s,%s>" % (self.id, self.folder, self.filename)
+
+
+# File for an uploaded ppt 
+class PptUploadedFile(models.Model):
+	STATUS = (
+				(u'F', u'Not processed'),
+				(u'S', u'Started'),
+				(u'E', u'Error'),
+				(u'C', u'Converted'),
+		)
+	
+	def getuploadedpath(instance, filename):
+		valid = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+		filename = ''.join(c for c in filename if c in valid)
+		return 'pptfile/%s/%s/%s' % (instance.ppt.user_id, instance.ppt.id, filename )
+	
+	ppt = models.ForeignKey(Ppt)
+	file = models.FileField(upload_to=getuploadedpath)
+	
+	exported_to_jpg = models.CharField(max_length=1, choices=STATUS)
+	exported_to_html = models.CharField(max_length=1, choices=STATUS)
+	
+	
+	def __unicode__(self):
+		return '<PptUploadedFile %s, %s, %s>' % (self.id, self.ppt.id, self.ppt.user.username)
 
 
 class PptTag(models.Model):

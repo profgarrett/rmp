@@ -5,6 +5,23 @@ from django.forms.widgets import RadioSelect
 from rating.models import *
 
 
+# Process a new file
+class PptForm(ModelForm):
+	
+	class Meta:
+		model = Ppt
+		exclude = ('user','filename', 'folder', 'rnd','unit_id')
+
+class PptUploadedFileForm(ModelForm):
+	file = forms.FileField(
+			label='Upload a file',
+			help_text='max. 42 megabytes'
+	)
+	
+	class Meta:
+		model = PptUploadedFile
+		exclude = ('user', 'ppt')
+
 # Create a form for creating ratings
 class PptRatingForm(ModelForm):
 	RATING_CHOICES = (

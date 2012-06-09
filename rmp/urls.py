@@ -23,4 +23,6 @@ urlpatterns = patterns('',
 	url(r'^ppt/(?P<ppt_id>\d+)/$', 'rating.views.view'),
 	url(r'^ppt/(?P<ppt_id>\d+)/rate$', 'rating.views.rate'),
 	url(r'^ppt/(?P<folder>\d+)/jpg/(?P<filename>\w+)\.JPG$', 'rating.views.jpg'),
+	
+	url(r'^ppt/upload$', 'rating.views.upload'),
 )

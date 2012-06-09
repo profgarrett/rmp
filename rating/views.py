@@ -9,6 +9,7 @@ from django.http import Http404
 from django.conf import settings
 
 import os
+import random
 
 from rating.models import *
 from rating.forms import *
@@ -27,6 +28,7 @@ def index(request):
 				'ratings': ratings.all()
 			},
 			context_instance=RequestContext(request))
+
 
 
 @login_required
@@ -71,6 +73,52 @@ def view(request, ppt_id):
 				'ratings': ratings.all()
 			},
 			context_instance=RequestContext(request))
+
+
+@login_required
+def upload(request):
+	
+	if request.method == 'POST':
+		
+		pptForm = PptForm(request.POST)
+		pptUploadedFileForm = PptUploadedFileForm(request.POST, request.FILES)
+		
+		if pptForm.is_valid() and pptUploadedFileForm.is_valid():
+			
+			# Save Ppt record
+			ppt = pptForm.save(commit=False)
+			ppt.user = request.user
+			ppt.folder = ''
+			ppt.filename = ''
+			ppt.rnd = random.randint(0, 1000000000)
+			ppt.unit_id = 0 
+			ppt.save()
+			pptForm.save_m2m()
+			
+			# Save actual uploaded file
+			pptUploadedFile = pptUploadedFileForm.save(commit=False)
+			pptUploadedFile.ppt = ppt
+			pptUploadedFile.save()
+			pptUploadedFileForm.save_m2m()
+			
+			return HttpResponseRedirect('/ppt/%s' % (ppt.id))
+		
+	else:
+		pptForm = PptForm()
+		pptUploadedFileForm = PptUploadedFileForm()
+	
+	return render_to_response('rating/upload.html', 
+			{	'pptForm': pptForm, 
+				'pptUploadedFileForm': pptUploadedFileForm
+			},
+			context_instance=RequestContext(request)
+	)
+
+
+#@login_required
+#def viewUserPpt(self):
+	
+
 
 
 @login_required
