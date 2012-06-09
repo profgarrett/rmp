@@ -34,10 +34,10 @@ class Ppt(models.Model):
 # File for an uploaded ppt 
 class PptUploadedFile(models.Model):
 	STATUS = (
-				(u'F', u'Not processed'),
-				(u'S', u'Started'),
+				(u'0', u'Not processed'),
+				(u'1', u'Started'),
 				(u'E', u'Error'),
-				(u'C', u'Converted'),
+				(u'2', u'Converted'),
 		)
 	
 	def getuploadedpath(instance, filename):
