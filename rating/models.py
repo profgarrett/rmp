@@ -41,7 +41,7 @@ class PptUploadedFile(models.Model):
 		)
 	
 	def getuploadedpath(instance, filename):
-		valid = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+		valid = '.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 		filename = ''.join(c for c in filename if c in valid)
 		return 'pptfile/%s/%s/%s' % (instance.ppt.user_id, instance.ppt.id, filename )
 	
