@@ -13,22 +13,26 @@ namespace PowerPointUnpacker
 {
     class PowerPoint
     {
-        private string path = "";
+        private string folder = "";
+        private string filename = "";
 
         Application pptApp;
         Presentation pptFile;
         Slides pptSlides;
 
-        public PowerPoint(string _path)
+        public PowerPoint(string path)
         {
-            path = _path;
+            path = path.Replace("/", @"\");
+            folder = Path.GetDirectoryName(path);
+            filename = Path.GetFileName(path);
         }
 
         public Boolean Open() {
             try
             {
+
                 pptApp = new Application();
-                pptFile = pptApp.Presentations.Open(path,
+                pptFile = pptApp.Presentations.Open(folder + @"\" + filename,
                      Microsoft.Office.Core.MsoTriState.msoFalse,
                      Microsoft.Office.Core.MsoTriState.msoTrue,
                      Microsoft.Office.Core.MsoTriState.msoTrue);
@@ -48,16 +52,16 @@ namespace PowerPointUnpacker
             try
             {
                 // Flush?
-                if (Program.flushDirectory && System.IO.Directory.Exists(path + @"\jpg"))
+                if (Program.flushDirectory && System.IO.Directory.Exists(folder + @"\jpg"))
                 {
-                    System.IO.Directory.Delete(path + @"\jpg");
+                    System.IO.Directory.Delete(folder + @"\jpg");
                 }
 
                 // Create.
-                if (!System.IO.Directory.Exists(path + @"\jpg"))
+                if (!System.IO.Directory.Exists(folder + @"\jpg"))
                 {
-                    System.IO.Directory.CreateDirectory(path + @"\jpg");
-                    pptFile.SaveAs(path + @"\jpg", PpSaveAsFileType.ppSaveAsJPG, MsoTriState.msoTrue);
+                    System.IO.Directory.CreateDirectory(folder + @"\jpg");
+                    pptFile.SaveAs(folder + @"\jpg", PpSaveAsFileType.ppSaveAsJPG, MsoTriState.msoTrue);
                 }
             }
             catch (Exception e)
@@ -73,15 +77,15 @@ namespace PowerPointUnpacker
             try
             {
                 // Flush?
-                if (Program.flushDirectory && System.IO.Directory.Exists(path + @"\html_files"))
+                if (Program.flushDirectory && System.IO.Directory.Exists(folder + @"\html_files"))
                 {
-                    System.IO.Directory.Delete(path + @"\html_files");
+                    System.IO.Directory.Delete(folder + @"\html_files");
                 }
 
                 // Create
-                if (!System.IO.Directory.Exists(path + @"\html_files_files"))
+                if (!System.IO.Directory.Exists(folder + @"\html_files"))
                 {
-                    pptFile.SaveAs(path + @"\", PpSaveAsFileType.ppSaveAsHTML, MsoTriState.msoTrue);
+                    pptFile.SaveAs(folder + @"\html", PpSaveAsFileType.ppSaveAsHTML, MsoTriState.msoTrue);
                 }
 
             }

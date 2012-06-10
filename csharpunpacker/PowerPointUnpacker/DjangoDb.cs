@@ -19,38 +19,15 @@ namespace PowerPointUnpacker
          * rmp/\csharpunpacker/PowerPointUnpacker/bin/debug
          * rmp/rmp/local_settings.py
          */
-        public void Connect() {
-            string conString = "";
-            string path = "../../../../rmp/local_settings.py";
-
-            if (!System.IO.File.Exists(path)){
-                throw new Exception("Invalid directory.  Could not find local_settings.py");
-            }
-
-            System.IO.StreamReader configFile = new System.IO.StreamReader(path);
-
-            // Skip first lines and start on line 7
-            for (int i = 0; i < 6; i++)
-            {
-                configFile.ReadLine();
-            }
-            conString = "server=" + stripDefault(configFile.ReadLine());
-            conString += ";user=" + stripDefault(configFile.ReadLine());
-            conString += ";database=" + stripDefault(configFile.ReadLine());
-            conString += ";port=" + stripDefault(configFile.ReadLine());
-            conString += ";password=" + stripDefault(configFile.ReadLine()) + ";";
+        public void Connect(Config config) {
+            string conString = "server=" + config.server +
+                ";user=" + config.user +
+                ";database=" + config.database +
+                ";port=" + config.port +
+                ";password=" + config.password + ";";
        
             myCon = new MySqlConnection(conString);
             myCon.Open();
-        }
-
-        /**
-         * Assumes input from a py file.
-         * VARIABLE = 'value';
-         */
-        private string stripDefault(string line)
-        {
-            return line.Split('\'')[1];
         }
 
         /**
@@ -60,7 +37,7 @@ namespace PowerPointUnpacker
         {
             Stack<PptUploadedFile> st = new Stack<PptUploadedFile>();
             string sql = "SELECT id, ppt_id, file, exported_to_jpg, exported_to_html " +
-                "FROM rmp.rating_pptuploadedfile " +
+                "FROM rmp.rating_pptuploadedfile " + 
                 "WHERE exported_to_jpg = '0'";
 
             MySqlCommand cmd = new MySqlCommand(sql, myCon);

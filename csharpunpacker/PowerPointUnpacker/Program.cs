@@ -26,13 +26,23 @@ namespace PowerPointUnpacker
 
         static void Main(string[] args)
         {
+            while (true)
+            {
+                Console.WriteLine("Searching at " + DateTime.Now.ToString());
+                Go();
+                System.Threading.Thread.Sleep(1000*5);
+            }
+        }
+
+        static void Go() {
             DjangoDb db = new DjangoDb();
-            db.Connect();
+            Config config = new Config("../../../../rmp/local_settings.py"); // pathway to config file.
+            db.Connect(config);
 
             Stack<PptUploadedFile> pptFiles = db.GetUnprocessedFiles();
             foreach(PptUploadedFile pptFile in pptFiles) {
 
-                PowerPoint p = new PowerPoint(pptFile.file);
+                PowerPoint p = new PowerPoint(config.pptfiles + "userfiles/" + pptFile.file);
 
                 // Open file.
                 if (!p.Open())
@@ -59,10 +69,6 @@ namespace PowerPointUnpacker
             }
 
             db.Close();
-
-            Console.Out.WriteLine(" >>> finished!");
-            Console.In.ReadLine();
-
 
         }
     }

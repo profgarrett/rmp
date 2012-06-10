@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
     <Compile Include="DjangoDb.cs" />
     <Compile Include="PowerPoint.cs" />
     <Compile Include="Program.cs" />
