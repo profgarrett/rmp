@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+
+
+<style type='text/css'>
+	.slidejpg {
+		/*width: 500px;
+		height: 400px;
+		border: solid 2px red;*/
+	}
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+<h1>View Metadata for User {{ user.username }} Presentation {{ ppt.id }}</h1>
+
+
+{% for page in pptHtmlPages %}
+<h2>{{ page.filename }}, {{ page.order }}</h2>
+
+
+
+{% for jpg in page.jpgs %}
+	<div id='jpg{{ jpg.id }}' class='slidejpg'>
+		<a href="{{ page.get_absolute_url }}">
+			<img src="{{ jpg.get_absolute_url }}" height='{{ jpg.height }}px' width='{{ jpg.width }}px'/>
+		</a>
+	</div>
+{% endfor %}
+
+
+
+<h3>Image Src</h3>
+<ul>
+	{% for src in page.ppthtmlpagesrc_set.all %}
+	<li>
+		{{ src.pos_left }}
+		{{ src.pos_width }}
+		{{ src.pos_top }}
+		{{ src.pos_height }}
+		
+		<img src="{{ src.ppthtmlimage.get_absolute_url }}" />
+			{{ src.ppthtmlimage.filename }}
+	</li>
+	{% endfor %}
+</ul>
+
+
+
+<h3>Text</h3>
+<ul>
+	{% for text in page.ppthtmlpagetext_set.all %}
+	<li>
+		{{ text.pos_left }}
+		{{ text.pos_width }}
+		{{ text.pos_top }}
+		{{ text.pos_height }}
+		{{ text.text }}
+	</li>
+	{% endfor %}
+</ul>
+
+
+{% endfor %}
+
+
+{% endblock %}

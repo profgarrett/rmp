@@ -15,14 +15,29 @@ urlpatterns = patterns('',
 	url(r'^accounts/logout', 'django.contrib.auth.views.logout'),
 	#url(r'^registration/password_change', 'django.contrib.auth.views.password_change'),
 	#url(r'^registration/password_reset', 'django.contrib.auth.views.password_reset'),
+
+)
+
+urlpatterns += patterns('rating.views',
 	
-	# Ratings
-	url(r'^$', 'rating.views.index'),
+	# Homepage
+	url(r'^$', 'homepage'),
 	
-	url(r'^ppt/random$', 'rating.views.gotorandom'),
-	url(r'^ppt/(?P<ppt_id>\d+)/$', 'rating.views.view'),
-	url(r'^ppt/(?P<ppt_id>\d+)/rate$', 'rating.views.rate'),
-	url(r'^ppt/(?P<folder>\d+)/jpg/(?P<filename>\w+)\.JPG$', 'rating.views.jpg'),
+	# Rating
+	url(r'^ppt/random$', 'goto_random'),
 	
-	url(r'^ppt/upload$', 'rating.views.upload'),
+	# User Ppts
+	url(r'^user/(?P<username>\w+)/$', 'user_view'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/$', 'user_ppt_view'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/metadata$', 'user_ppt_view_metadata'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/rate$', 'user_ppt_rate'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/jpg/Slide(?P<slide>\d+)\.JPG$', 'user_ppt_jpg'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/img/(?P<filename>.*)$', 'user_ppt_img'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/html.htm$', 'user_ppt_htm'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/html_files/(?P<filename>.*)$', 'user_ppt_img'),
+	url(r'^user/(?P<username>\w+)/ppt/upload$', 'user_ppt_upload'),
+	
+	
+	# Images (OLD FASHION)
+	url(r'^ppt/(?P<folder>\d+)/jpg/(?P<filename>\w+)\.JPG$', 'ppt_jpg'),
 )

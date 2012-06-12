@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+<h1>View User {{ user.username }} Presentation {{ ppt.id }}</h1>
+
+
+<h2>Uploaded Files</h2>
+<ul>
+{% for ppt in pptuploadedfiles %}
+	<li>{{ ppt.id }}</a></li>
+{% endfor %}
+</ul>
+
+
+<h2>Ratings</h2>
+{% for rating in ratings %}
+	<div>User {{ rating.user_id }} rated {{ rating.ppt_id }} presentation on {{ rating.ratedate }}
+	Lengend: 1, Strongly Agree, 2 is Agree, 3 is Neutral, 4 is Disagree, 5 is Strongly Disagree
+	</div>
+	<ul>
+		<li>These slides have a lot of images {{ rating.contentimage }}</br>
+		<li>These slides have a lot of text {{ rating.contenttext }}</br>
+		<li>These slides would help me stay interested during class {{ rating.slidenovel }}</br>
+		<li>These slides would help me prepare for class or study for tests {{ rating.slidestudy }}</br>
+		<li>These slides are professional quality {{ rating.slidequality }}</br>
+		<li>These slides are interesting {{ rating.slideinteresting }}</br>
+	</ul>
+{% endfor %}
+
+
+<h2>Slides</h2>
+{% for jpg in jpgs  %}
+<img src="{{ jpg }}" />
+{% endfor %}
+
+
+
+
+{% endblock %}

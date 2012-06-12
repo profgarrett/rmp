@@ -1,7 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+import os
 
-# Create your models here.
+from rating.utility import parseInt
+from django.conf import settings
 
 if False:
 	class Unit(models.Model):
@@ -27,6 +30,19 @@ class Ppt(models.Model):
 	unit_id = models.IntegerField() #models.ForeignKey(Unit)
 	user = models.ForeignKey(User)
 	
+	def jpgs(self):
+		jpg = '%suserfiles/pptfile/%s/%s/jpg/' % (settings.PPT_FILEPATH, self.user_id, self.id )
+		username = self.user.username
+		
+		if not os.path.exists(jpg):
+			return []
+		
+		jpgs = []
+		for j in os.listdir(jpg):
+			if j[-3:] == 'JPG': jpgs.append('/user/%s/ppt/%s/jpg/%s' % (username,self.id,j))
+		
+		return jpgs
+	
 	def __unicode__(self):
 		return "<Ppt %s, %s,%s>" % (self.id, self.folder, self.filename)
 
@@ -40,9 +56,11 @@ class PptUploadedFile(models.Model):
 				(u'2', u'Converted'),
 		)
 	
+	# Only allow alpha, numeric, and . in filename w max len of 70
 	def getuploadedpath(instance, filename):
 		valid = '.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 		filename = ''.join(c for c in filename if c in valid)
+		filename = filename[:70] 
 		return 'pptfile/%s/%s/%s' % (instance.ppt.user_id, instance.ppt.id, filename )
 	
 	ppt = models.ForeignKey(Ppt)
@@ -54,6 +72,113 @@ class PptUploadedFile(models.Model):
 	
 	def __unicode__(self):
 		return '<PptUploadedFile %s, %s, %s>' % (self.id, self.ppt.id, self.ppt.user.username)
+
+
+# Model for storing results of parsing html
+class PptJpg(models.Model):
+	parseVersion = models.SmallIntegerField()
+	md5 = models.CharField(max_length=255)
+	filename = models.CharField(max_length=255)
+	size = models.IntegerField()
+	height = models.IntegerField()
+	width = models.IntegerField()
+	
+	ppt = models.ForeignKey(Ppt)
+	
+	def get_absolute_path(self, user=None):
+		if user==None:
+			user = self.ppt.user
+		
+		return "%s/userfiles/pptfile/%s/%s/jpg/%s" % (
+				settings.PPT_FILEPATH, user.id, self.ppt_id, self.filename)
+	
+	def get_absolute_url(self, user=None):
+		if user==None:
+			user = self.ppt.user
+		
+		return "/user/%s/ppt/%s/jpg/%s" % (user.username, self.ppt_id, self.filename)
+	
+	def __unicode__(self):
+		return '<PptJpg %s, %s, %s>' % (self.id, self.filename, self.ppt)
+
+
+# Model for storing results of parsing html
+class PptHtmlImage(models.Model):
+	parseVersion = models.SmallIntegerField()
+	md5 = models.CharField(max_length=255)
+	filename = models.CharField(max_length=255)
+	size = models.IntegerField()
+	height = models.IntegerField()
+	width = models.IntegerField()
+	
+	ppt = models.ForeignKey(Ppt)
+	
+	def get_absolute_url(self):
+		user = self.ppt.user
+		return "/user/%s/ppt/%s/img/%s" % (user.username, self.ppt_id, self.filename)
+	
+	def __unicode__(self):
+		return '<PptHtmlImage %s, %s, %s>' % (self.id, self.filename, self.ppt)
+
+# Model for storing results of parsing html
+class PptHtmlPage(models.Model):
+	parseVersion = models.SmallIntegerField()
+	HTML_TYPES = (
+				(u'M', u'Master'),
+				(u'S', u'Slide'),
+				(u'O', u'Outline'),
+		)
+	
+	md5 = models.CharField(max_length=255)
+	filename = models.CharField(max_length=255)
+	pagetype = models.CharField(max_length=1, choices=HTML_TYPES)
+	html = models.TextField()
+	ppt = models.ForeignKey(Ppt)
+	
+	def order(self):
+		return parseInt(self.filename)
+	
+	def get_absolute_url(self):
+		user = self.ppt.user
+		return "/user/%s/ppt/%s/img/%s" % (user.username, self.ppt_id, self.filename)
+	
+	def __unicode__(self):
+		return '<PptHtmlPage %s, %s, %s, %s>' % (self.id, self.pagetype, self.filename, self.ppt)
+
+# Model for storing results of parsing html
+class PptHtmlPageSrc(models.Model):
+	parseVersion = models.SmallIntegerField()
+	
+	ppthtmlpage = models.ForeignKey(PptHtmlPage)
+	ppthtmlimage = models.ForeignKey(PptHtmlImage)
+	
+	pos_left = models.IntegerField()
+	pos_width = models.IntegerField()
+	pos_top = models.IntegerField()
+	pos_height = models.IntegerField()
+	
+	def get_absolute_url(self):
+		return self.ppthtmlimage.get_absolute_url()
+	
+	def __unicode__(self):
+		return '<PptHtml %s>' % (self.id)
+
+# Model for storing results of parsing html
+class PptHtmlPageText(models.Model):
+	parseVersion = models.SmallIntegerField()
+	md5 = models.CharField(max_length=255)
+	text = models.TextField()
+	
+	pos_left = models.IntegerField()
+	pos_width = models.IntegerField()
+	pos_top = models.IntegerField()
+	pos_height = models.IntegerField()
+	
+	ppthtmlpage = models.ForeignKey(PptHtmlPage)
+	
+	def __unicode__(self):
+		return '<PptHtml %s>' % (self.id)
+
 
 
 class PptTag(models.Model):

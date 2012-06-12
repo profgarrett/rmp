@@ -13,11 +13,11 @@ import random
 
 from rating.models import *
 from rating.forms import *
-
+from rating.parser import HtmlParser
 
 
 @login_required
-def index(request):
+def homepage(request):
 	user = request.user
 	
 	ratings = PptRating.objects.filter(user__username=user).order_by('-ratedate')
@@ -32,7 +32,7 @@ def index(request):
 
 
 @login_required
-def gotorandom(request):
+def goto_random(request):
 	
 	ppt_list = Ppt.objects.filter(user__username = 'pearson')
 	ppt_list = ppt_list.exclude(pptrating__user__username=request.user.username)
@@ -48,7 +48,114 @@ def gotorandom(request):
 
 
 @login_required
-def view(request, ppt_id):
+def user_view(request, username):
+	user = get_object_or_404(User, username=username)
+	
+	ppts = Ppt.objects.filter(user_id=user.id).order_by('pk')
+	
+	return render_to_response('rating/user_view.html',
+			{	'user': user,
+				'ppts': ppts
+			},
+			context_instance=RequestContext(request)
+	)
+
+
+
+@login_required
+def user_ppt_view(request, username, ppt_id):
+	user = get_object_or_404(User, username=username)
+	ppt = Ppt.objects.get(user_id=user.id, id=ppt_id)
+	
+	ratings = PptRating.objects.filter(ppt_id=ppt_id)
+	pptuploadedfiles = PptUploadedFile.objects.filter(ppt_id=ppt_id)
+	jpgs = ppt.jpgs()
+	
+	return render_to_response('rating/user_ppt_view.html',
+			{	'user': user,
+				'ppt': ppt,
+				'jpgs': jpgs,
+				'ratings': ratings,
+				'pptuploadedfiles': pptuploadedfiles
+			},
+			context_instance=RequestContext(request)
+	)
+
+
+
+@login_required
+def user_ppt_view_metadata(request, username, ppt_id):
+	user = get_object_or_404(User, username=username)
+	ppt = Ppt.objects.get(user_id=user.id, id=ppt_id)
+	
+	ratings = PptRating.objects.filter(ppt_id=ppt_id)
+	pptuploadedfiles = PptUploadedFile.objects.filter(ppt_id=ppt_id)
+	jpgs = ppt.jpgs()
+	
+	# Make sure that we have parsed the file...
+	filepath  = '%suserfiles/pptfile/%s/%s/' % (settings.PPT_FILEPATH, user.id, ppt_id)
+	#parser = HtmlParser(ppt, filepath, True)
+	
+	pptHtmlImages = PptHtmlImage.objects.filter(ppt_id=ppt_id)
+	pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt_id)
+	
+	for p in pptHtmlPages:
+		filename = 'Slide%s.JPG' % p.order()
+		p.jpgs = PptJpg.objects.filter(ppt_id=ppt_id,filename=filename)
+	
+	return render_to_response('rating/user_ppt_view_metadata.html',
+			{	'user': user,
+				'ppt': ppt,
+				'pptHtmlPages': pptHtmlPages,
+			},
+			context_instance=RequestContext(request)
+	)
+
+
+# Return a html file index.
+@login_required
+def user_ppt_htm(request, username, ppt_id):
+	user = get_object_or_404(User, username=username)
+	
+	filepath  = '%suserfiles/pptfile/%s/%s/html.htm' % (settings.PPT_FILEPATH, user.id, ppt_id )
+	try:
+		f = open(filepath, 'rb')
+		return HttpResponse(f.read())
+	except:
+		raise Http404
+
+
+
+# Return a jpg image.
+@login_required
+def user_ppt_jpg(request, username, ppt_id, slide):
+	user = get_object_or_404(User, username=username)
+	
+	filepath  = '%suserfiles/pptfile/%s/%s/jpg/Slide%s.JPG' % (settings.PPT_FILEPATH, user.id, ppt_id, slide )
+	try:
+		f = open(filepath, 'rb')
+		return HttpResponse(f.read())
+	except:
+		raise Http404
+
+
+# Return an image that was exported from a html presentation
+@login_required
+def user_ppt_img(request, username, ppt_id, filename):
+	user = get_object_or_404(User, username=username)
+	if '..' in filename:
+		raise Http404
+	
+	filepath  = '%suserfiles/pptfile/%s/%s/html_files/%s' % (settings.PPT_FILEPATH, user.id, ppt_id, filename )
+	try:
+		f = open(filepath, 'rb')
+		return HttpResponse(f.read())
+	except:
+		raise Http404
+
+
+@login_required
+def XXXXuser_ppt_view(request, username, ppt_id):
 	ppt = get_object_or_404(Ppt, pk=ppt_id)
 	
 	# If me, then show all ratings.  Otherwise, shown own ratings.
@@ -76,7 +183,7 @@ def view(request, ppt_id):
 
 
 @login_required
-def upload(request):
+def user_ppt_upload(request, username):
 	
 	if request.method == 'POST':
 		
@@ -122,7 +229,7 @@ def upload(request):
 
 
 @login_required
-def rate(request, ppt_id):
+def user_ppt_rate(request, username, ppt_id):
 	ppt = get_object_or_404(Ppt, pk=ppt_id)
 	
 	if request.method == 'POST':
@@ -167,7 +274,7 @@ def rate(request, ppt_id):
 
 # Return a jpg image.
 @login_required
-def jpg(request, folder, filename):
+def ppt_jpg(request, folder, filename):
 	if '..' in folder or '..' in filename:
 		raise Http404
 	
