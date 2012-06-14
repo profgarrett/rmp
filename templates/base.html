@@ -12,7 +12,8 @@
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/ppt/random">Random Presentation</a></li>
-            <li><a href="/ppt/upload">Upload</a></li>
+			<li><a href="/user/{{ user.username }}/">{{ user.username }} </a></li>
+            <li><a href="/user/{{ user.username }}/ppt/upload">Upload</a></li>
             <li><a href="/accounts/logout">Log Out</a></li>
         </ul>
         {% endblock %}

@@ -209,7 +209,7 @@ def user_ppt_upload(request, username):
 			pptUploadedFile.save()
 			pptUploadedFileForm.save_m2m()
 			
-			return HttpResponseRedirect('/ppt/%s' % (ppt.id))
+			return HttpResponseRedirect(ppt.get_absolute_url())
 		
 	else:
 		pptForm = PptForm()
