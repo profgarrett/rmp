@@ -1,0 +1,21 @@
+c:\users\garrettn.admin\documents\visual studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\ResolveAssemblyReference.cache
+c:\users\garrettn.admin\documents\visual studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.exe
+c:\users\garrettn.admin\documents\visual studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.pdb
+c:\users\garrettn.admin\documents\visual studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.csproj.ResolveComReference.cache
+c:\users\garrettn.admin\documents\visual studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.exe
+c:\users\garrettn.admin\documents\visual studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.pdb
+\\itfilesvr\garrettn$\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.csproj.ResolveComReference.cache
+\\itfilesvr\garrettn$\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.exe
+\\itfilesvr\garrettn$\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.pdb
+C:\Users\garrettn\Documents\Visual Studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.csproj.ResolveComReference.cache
+C:\Users\garrettn\Documents\Visual Studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.exe
+C:\Users\garrettn\Documents\Visual Studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.pdb
+C:\Users\garrettn\Documents\Visual Studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.exe
+C:\Users\garrettn\Documents\Visual Studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.pdb
+C:\Users\garrettn\Documents\Visual Studio 2010\Projects\PowerPointUnpacker\PowerPointUnpacker\obj\x86\Debug\ResolveAssemblyReference.cache
+E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.csproj.ResolveComReference.cache
+E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.exe
+E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.pdb
+E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\ResolveAssemblyReference.cache
+E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.exe
+E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.pdb

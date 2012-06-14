@@ -43,6 +43,9 @@ class Ppt(models.Model):
 		
 		return jpgs
 	
+	def get_absolute_url(self):
+		return '/user/%s/ppt/%s/' % (self.user.username, self.id)
+	
 	def __unicode__(self):
 		return "<Ppt %s, %s,%s>" % (self.id, self.folder, self.filename)
 
@@ -210,6 +213,10 @@ class PptRating(models.Model):
 	
 	user = models.ForeignKey(User)
 	ppt = models.ForeignKey(Ppt)
+	
+	def get_absolute_url(self):
+		return self.ppt.get_absolute_url()
+	
 	
 	def __unicode__(self):
 		return "<PptRating ('%s', '%s', '%s' )" % (self.id, self.user, self.ppt)

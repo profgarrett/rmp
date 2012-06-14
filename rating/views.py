@@ -42,8 +42,9 @@ def goto_random(request):
 		return HttpResponse('No more Ppt to rate')
 	else:
 		ppt_list = ppt_list[0]
+		user = ppt_list.user
 	
-	return HttpResponseRedirect('/ppt/'+str(ppt_list.pk)+'/rate')
+	return HttpResponseRedirect('/user/%s/ppt/%s/rate' % (user.username, ppt_list.pk))
 
 
 

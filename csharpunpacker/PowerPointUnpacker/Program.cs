@@ -43,6 +43,7 @@ namespace PowerPointUnpacker
             foreach(PptUploadedFile pptFile in pptFiles) {
 
                 PowerPoint p = new PowerPoint(config.pptfiles + "userfiles/" + pptFile.file);
+                Console.WriteLine("Processing " + pptFile.file);
 
                 // Open file.
                 if (!p.Open())

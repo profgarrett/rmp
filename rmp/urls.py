@@ -30,11 +30,16 @@ urlpatterns += patterns('rating.views',
 	url(r'^user/(?P<username>\w+)/$', 'user_view'),
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/$', 'user_ppt_view'),
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/metadata$', 'user_ppt_view_metadata'),
+	
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/rate$', 'user_ppt_rate'),
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/jpg/Slide(?P<slide>\d+)\.JPG$', 'user_ppt_jpg'),
-	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/img/(?P<filename>.*)$', 'user_ppt_img'),
+	
+	## View the exported html.htm file and other image files
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/html.htm$', 'user_ppt_htm'),
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/html_files/(?P<filename>.*)$', 'user_ppt_img'),
+	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/img/(?P<filename>.*)$', 'user_ppt_img'),
+	
+	# Create
 	url(r'^user/(?P<username>\w+)/ppt/upload$', 'user_ppt_upload'),
 	
 	
