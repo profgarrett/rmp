@@ -23,6 +23,7 @@ class HtmlParser:
 		self.path = path # Where is the html folder?
 		self.debug = debug # print debug statements?
 		
+		# Strip trailing slash
 		if self.path[-1:] == '/' or self.path[-1:] == '\\':
 			self.path = self.path[:-1]
 		
@@ -104,6 +105,12 @@ class HtmlParser:
 		for bssub in bs.find_all(style=re.compile('left')):
 			self._parsePosition(bssub, pos)
 		
+		# ensure that position is never less than 0, or greater than 100
+		for p in pos:
+			if pos[p] is None: continue
+			if pos[p] < 0: pos[p] = 0
+			if pos[p] > 100: pos[p] = 100
+
 		return pos
 	
 	
@@ -165,11 +172,14 @@ class HtmlParser:
 		# Find Html Files 
 		files = os.listdir(path)
 		
+		indexes = []
 		pages = []
 		images = []
 		
 		for filename in files:
 			fl = filename.lower()
+			if fnmatch.fnmatch(fl, '.htm'):
+				indexes.append(filename)
 			if fnmatch.fnmatch(fl, 'slide????.htm'):
 				pages.append(filename)
 			elif fnmatch.fnmatch(fl, 'slide????_image*'):
@@ -211,8 +221,9 @@ class HtmlParser:
 			# Try to fix encoding issue.  PPT appears to use meta tag saying that it uses CP1252
 			fh = codecs.open(path+filename,'r', 'windows-1252')
 			html = fh.read()
-			html = html.encode('utf-8') # DB default encoding.
-			bs = BeautifulSoup(html)
+			html = html.encode('utf-8') # database default encoding.
+			# use html5lib instead of default to avoid problems with img tags not being self-closing.
+			bs = BeautifulSoup(html, 'html5lib') 
 			
 			
 			# Setup html page first.
@@ -239,8 +250,7 @@ class HtmlParser:
 				pptHtmlPage.save()
 				if self.debug: print 'Parsed PptHtmlPage for ' + str(ppt.id) + ' - ' + pptHtmlPage.filename
 			
-			
-			
+						
 			# Add a link for every image found on the page.
 			images = bs.find_all('img')
 			for img in images:
@@ -250,7 +260,7 @@ class HtmlParser:
 					continue
 				
 				pos = self._parsePosition(img)
-				
+
 				# Find matching actual image entry and then add to page.
 				pptHtmlImage = PptHtmlImage.objects.get(ppt_id=ppt.id, filename=src)
 				pptHtmlPageSrc = PptHtmlPageSrc.objects.filter(
@@ -276,9 +286,17 @@ class HtmlParser:
 				if self.debug: print 'Parsed pptHtmlPageSrc for ' + str(pptHtmlPage.id) + ' - ' + src 
 			
 			
+			def text_filter(tag):
+				if not tag.name == 'div': return False
+				if tag.has_key('class'):
+					if 'O' in tag['class']: return True # Bullet point
+					if 'CT' in tag['class']: return True # Title 
+					if 'CB' in tag['class']: return True # Sub-title 
+					if 'T' in tag['class']: return True # Sub-title side bold? 
+				return False
 			
 			# Add each text snip
-			divs = bs.find_all('div', 'O')
+			divs = bs.find_all(text_filter)
 			for d in divs:
 				text = d.get_text()
 				text = text.replace('\r','').replace('\n','').strip().encode('utf-8')

@@ -1,4 +1,3 @@
-# Create your views here.
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
@@ -83,31 +82,80 @@ def user_ppt_view(request, username, ppt_id):
 	)
 
 
+class ScaledPage():
+
+	def __init__(self, pptHtmlPage, WIDTH):
+		self.WIDTH = WIDTH
+		self.RATIO = 0.0
+		self.HEIGHT = 0  # set in set_jpg, as we don't know aspect ratio yet.
+
+		self.page = pptHtmlPage
+		jpg = self.page.jpg()
+		if jpg is None:
+			 print 'Unable to find', pptHtmlPage, jpg
+		else:
+			self.set_jpg(jpg)
+			self.set_src()
+			self.set_text()
+	
+
+	def set_jpg(self, jpg):
+		self.RATIO = (1.0 * self.WIDTH) / jpg.width
+		self.HEIGHT =  self.RATIO * jpg.height
+		
+		self.jpg = {
+			'src': jpg.get_absolute_url(),
+			'height': self.HEIGHT,
+			'width': self.WIDTH,
+		}
+
+	# Convert images to a nice format. Note that measurements are by %.
+	def set_src(self):
+		self.srcs = []
+		for src in self.page.ppthtmlpagesrc_set.all():
+			self.srcs.append({
+				'src': src.get_absolute_url(),
+				'height': int(src.pos_height * self.HEIGHT / 100),
+				'width': int(src.pos_width * self.WIDTH / 100),
+				'left': int(src.pos_left * self.WIDTH / 100),
+				'top': int(src.pos_top * self.HEIGHT / 100),
+			}) 
+
+	# Convert texts into a nice format. Note that measurements are by %
+	def set_text(self):
+		self.texts = []
+
+		for text in self.page.ppthtmlpagetext_set.all():
+			self.texts.append({
+				'text': text.text,
+				'height': int(text.pos_height * self.HEIGHT / 100),
+				'width': int(text.pos_width * self.WIDTH / 100),
+				'left': int(text.pos_left * self.WIDTH / 100),
+				'top': int(text.pos_top * self.HEIGHT / 100),
+			})
+
 
 @login_required
 def user_ppt_view_metadata(request, username, ppt_id):
+	
 	user = get_object_or_404(User, username=username)
 	ppt = Ppt.objects.get(user_id=user.id, id=ppt_id)
 	
 	ratings = PptRating.objects.filter(ppt_id=ppt_id)
 	pptuploadedfiles = PptUploadedFile.objects.filter(ppt_id=ppt_id)
-	jpgs = ppt.jpgs()
+	#jpgs = ppt.jpgs()
 	
 	# Make sure that we have parsed the file...
 	filepath  = '%suserfiles/pptfile/%s/%s/' % (settings.PPT_FILEPATH, user.id, ppt_id)
-	#parser = HtmlParser(ppt, filepath, True)
+	parser = HtmlParser(ppt, filepath, True)
 	
-	pptHtmlImages = PptHtmlImage.objects.filter(ppt_id=ppt_id)
-	pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt_id)
-	
-	for p in pptHtmlPages:
-		filename = 'Slide%s.JPG' % p.order()
-		p.jpgs = PptJpg.objects.filter(ppt_id=ppt_id,filename=filename)
-	
+	#pptHtmlImages = PptHtmlImage.objects.filter(ppt_id=ppt_id)
+	pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt_id).all()
+
 	return render_to_response('rating/user_ppt_view_metadata.html',
 			{	'user': user,
 				'ppt': ppt,
-				'pptHtmlPages': pptHtmlPages,
+				'scaledPages': [ScaledPage(p, 500) for p in pptHtmlPages],
 			},
 			context_instance=RequestContext(request)
 	)

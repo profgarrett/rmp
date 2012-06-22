@@ -21,6 +21,7 @@ if False:
 		def __unicode__(self):
 			return "<Unit %s, %s,%s>" % (self.id, self.title, self.unittype)
 
+
 class Ppt(models.Model):
 	filename = models.CharField(max_length=240)
 	folder = models.CharField(max_length=240)
@@ -123,6 +124,7 @@ class PptHtmlImage(models.Model):
 	def __unicode__(self):
 		return '<PptHtmlImage %s, %s, %s>' % (self.id, self.filename, self.ppt)
 
+
 # Model for storing results of parsing html
 class PptHtmlPage(models.Model):
 	parseVersion = models.SmallIntegerField()
@@ -138,6 +140,22 @@ class PptHtmlPage(models.Model):
 	html = models.TextField()
 	ppt = models.ForeignKey(Ppt)
 	
+	_cache = None
+
+	def jpg(self):
+		if self._cache == None: self._cache = {}
+
+		if '_jpg' not in self._cache:
+			filename = 'Slide%s.JPG' % self.order()
+			jpg = PptJpg.objects.filter(ppt_id=self.ppt_id,filename=filename)
+			if len(jpg) > 0:
+				self._cache['jpg'] = jpg[0]
+			else:
+				self._cache['jpg'] = None
+
+		return self._cache['jpg']
+
+
 	def order(self):
 		return parseInt(self.filename)
 	
@@ -147,6 +165,7 @@ class PptHtmlPage(models.Model):
 	
 	def __unicode__(self):
 		return '<PptHtmlPage %s, %s, %s, %s>' % (self.id, self.pagetype, self.filename, self.ppt)
+
 
 # Model for storing results of parsing html
 class PptHtmlPageSrc(models.Model):
@@ -165,6 +184,7 @@ class PptHtmlPageSrc(models.Model):
 	
 	def __unicode__(self):
 		return '<PptHtml %s>' % (self.id)
+
 
 # Model for storing results of parsing html
 class PptHtmlPageText(models.Model):

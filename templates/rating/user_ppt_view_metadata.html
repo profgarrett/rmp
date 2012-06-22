@@ -5,10 +5,44 @@
 
 
 <style type='text/css'>
+
+	#slidelist {
+		border: solid 1px black;
+	}
+	
+	#slidelist tr td {
+		padding: 5px;
+	}
+
+	.slidelist_td_left {
+		vertical-align: text-top;
+	}
+
+	.slidelist_td_right {
+		
+	}
+	
+	
 	.slidejpg {
 		/*width: 500px;
 		height: 400px;
 		border: solid 2px red;*/
+	}
+	/*
+	.jpg {
+		width: 100%;
+	}
+	.scale {
+		width: 400px;
+	}
+	.scale img {
+		width: 100%;
+	}
+	*/
+	.slidepage {
+		background-color: white;
+		border: solid 2px black;
+		position: relative;
 	}
 </style>
 
@@ -19,53 +53,54 @@
 <h1>View Metadata for User {{ user.username }} Presentation {{ ppt.id }}</h1>
 
 
-{% for page in pptHtmlPages %}
-<h2>{{ page.filename }}, {{ page.order }}</h2>
+<table id='slidelist'>
+{% for page in scaledPages %}
 
-
-
-{% for jpg in page.jpgs %}
-	<div id='jpg{{ jpg.id }}' class='slidejpg'>
-		<a href="{{ page.get_absolute_url }}">
-			<img src="{{ jpg.get_absolute_url }}" height='{{ jpg.height }}px' width='{{ jpg.width }}px'/>
+<tr>
+	<td class='slidelist_td_left'>
+		<b>{{ page.jpg.src }} {{ page.order }}</b>
+		<a href="{{ page.page.get_absolute_url }}">
+			<img src="{{ page.jpg.src }}" height="{{ page.jpg.height }}" width="{{ page.jpg.width}}" class='jpg'>
 		</a>
-	</div>
-{% endfor %}
+	</td>
+	<td class='slidelist_td_right'>
 
 
+		<b>Text</b>
+		<ul>
+			{% for text in page.texts %}
+			<li>
+				{{ text.text }} = 
+				{{ text.left }},
+				{{ text.width }},
+				{{ text.top }},
+				{{ text.height }}
+			</li>
+			{% endfor %}
+		</ul>
 
-<h3>Image Src</h3>
-<ul>
-	{% for src in page.ppthtmlpagesrc_set.all %}
-	<li>
-		{{ src.pos_left }}
-		{{ src.pos_width }}
-		{{ src.pos_top }}
-		{{ src.pos_height }}
+		<b>Images</b>
+		<ul>
+		{% for src in page.srcs %}
+			<li>
+				{{ src.src }}
+				<div class='slidepage' style="height:{{ page.jpg.height }}px; width:{{ page.jpg.width }}px">
+				<img src="{{ src.src }}" 
+					width="{{ src.width }}px" 
+					height="{{ src.height }}px" 
+					style="position:absolute;left:{{ src.left }}px;top:{{ src.top }}px;"
+				/>
+			</div>
+			</li>
+		{% endfor %}
+		</ul>
+
 		
-		<img src="{{ src.ppthtmlimage.get_absolute_url }}" />
-			{{ src.ppthtmlimage.filename }}
-	</li>
-	{% endfor %}
-</ul>
-
-
-
-<h3>Text</h3>
-<ul>
-	{% for text in page.ppthtmlpagetext_set.all %}
-	<li>
-		{{ text.pos_left }}
-		{{ text.pos_width }}
-		{{ text.pos_top }}
-		{{ text.pos_height }}
-		{{ text.text }}
-	</li>
-	{% endfor %}
-</ul>
-
+	</td>
+</tr>
 
 {% endfor %}
 
+</table>
 
 {% endblock %}
