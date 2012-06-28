@@ -10,3 +10,22 @@ def parseInt(ss):
 	return int(round(float(safe)))
 
 
+# Remove all newlines and odd characters from a string
+def prettyString(s):
+	
+	# remove linebreaks
+	s = s.replace('\r','').replace('\n','')
+	
+	# tabs
+	s = s.replace('\t',' ')
+
+	# remove double spaces
+	i = len(s)
+	s = s.replace('  ', ' ')
+	
+	while len(s) < i:
+		i = len(s)
+		s = s.replace('  ', ' ')
+
+	# trim
+	return s.strip()

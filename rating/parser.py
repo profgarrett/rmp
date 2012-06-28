@@ -1,6 +1,6 @@
 # Manage PPT Files
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 import urllib, string
 import urllib2
 import cookielib
@@ -14,9 +14,10 @@ import codecs
 
 from rating.models import PptJpg
 from rating.models import *
-from rating.utility import parseInt
+from rating.utility import parseInt, prettyString
 
 class HtmlParser:
+	PARSE_VERSION = 1 # Way for force updating db on algorithm changes
 	
 	def __init__(self, ppt, path, debug=False):
 		self.ppt = ppt
@@ -30,15 +31,25 @@ class HtmlParser:
 		if not os.path.exists(self.path):
 			raise Exception('Path %s does not exist.' % (self.path))
 		
-		# Find Jpg Files 
-		if os.path.exists(self.path+'/jpg'):
-			self.parseJPG(ppt, self.path+'/jpg/')
-		
-		# Find html files
-		if os.path.exists(self.path+'/html_files'):
-			self.parseHTML(ppt, self.path+'/html_files/')
-	
-	
+		# Find uploaded files.
+		for p in PptUploadedFile.objects.filter(ppt_id=ppt.id):
+			
+			if p.jpg_export_status == '2' and (debug or p.jpg_parse_version < self.PARSE_VERSION):
+				if os.path.exists(self.path+'/jpg'):
+					self.parseJPG(ppt, self.path+'/jpg/')
+					p.jpg_parse_version = self.PARSE_VERSION
+					p.save()
+
+			if p.html_export_status == '2' and (debug or p.html_parse_version < self.PARSE_VERSION):
+				if os.path.exists(self.path+'/html_files'):
+					self.parseHTML(ppt, self.path+'/html_files/')
+					p.html_parse_version = self.PARSE_VERSION
+					p.save()
+				
+
+
+
+
 	####################
 	## Utility functions
 	####################
@@ -82,34 +93,88 @@ class HtmlParser:
 	
 	# Recursively parse out the position from the beautifulsoup element passed.
 	# Uses algorithm of return min left, min top, max width, max height
+	# Note that once we get a position, the results will be returned.
+	# This is a result of some divs not having a position, but relying upon contained spans
+	# 	whose left/top/right/bottom must be combined. 
+	#	However, other divs have position, and their contained spans are positioned relatively
+	#	and % refers to the div, not the entire page.
+	#
+	# Currently, this is flawed.  Need to write in the opposite direction following:
+	# Find child node
+	# Goto parent until root doing
+	# 	If position, then save
+	#	If already had position, and both are absolutely positioned, then
+	#		change child position to be the % of the parent position.
 	def _parsePosition(self, bs, pos=None):
 		
-		if pos == None:
-			pos = {'width': None, 'left': None, 'top': None, 'height': None } 
-		
-		if 'style' in bs.attrs:
-			attrs = bs.attrs['style'].split(';')
+		# See if the top-left corner or bottom-right corner are outside existing pos
+		def set(o1, o2, width, left):
 			
-			for a in attrs:
+			# Make sure we have 2 valid sets of positions.
+			if o1[width] is None or o1[left] is None:
+				return o2[width], o2[left]
+			elif o2[width] is None or o2[left] is None:
+				return o1[width], o1[left]
+			
+			# Set left
+			if o1[left] < o2[left]:
+				new_left = o1[left]
+			else:
+				new_left = o2[left]
+
+			# Now that we have left, we can set width.
+			if o1[width]+o1[left] > o2[width]+o2[left]:
+				new_width = o1[width]+o1[left]-new_left
+			else:
+				new_width = o2[width]+o2[left]-new_left
+
+			return new_width, new_left
+
+		new_pos = {'width': None, 'left': None, 'top': None, 'height': None } 
+		
+		# Find the position of this element
+		if 'style' in bs.attrs:
+			for a in bs.attrs['style'].split(';'):
 				a = a.split(':')
 				a[0] = a[0].lower().strip()
-				for p in pos:
-					if p in a[0]:
-						i = parseInt(a[1])
-						if a[0] in ['width', 'height'] and (pos[a[0]] is None or i > pos[a[0]]):
-							pos[a[0]] = i
-						if a[0] in ['left', 'top'] and (pos[a[0]] is None or i < pos[a[0]]):
-							pos[a[0]] = i
+				if a[0] in ['left', 'top', 'width', 'height']: new_pos[a[0]] = parseInt(a[1])
+
+		if pos == None:
+			# Set initial values to the dom object and continue.
+			pos = new_pos
+		else:
+			pos['width'], pos['left'] = set(pos, new_pos, 'width','left')
+			pos['height'], pos['top'] = set(pos, new_pos, 'height','top')
+
 		
-		# recursively scan descendents that have a style.
-		for bssub in bs.find_all(style=re.compile('left')):
-			self._parsePosition(bssub, pos)
+		# If we don't have a position, recursively search.
+		# This is slightly complicated because we may have the following:
+		## Div -> div.style -> span.style
+		#  We want the divs, but not the span style, because it's relative to the div, and not the page.
+		# But, we still need to have this work
+		# Div -> [span.style, span.style]
+		# And this,
+		# Div -> [ div-> [span.style, span.style], div.style, div.style ]
+		# So, the compromise is to stop recursing once we get a position, but to always iterate through
+		# the current level completely.
+		if pos['width'] == None or pos['left'] == None or pos['top'] == None or pos['height'] == None:
+			# Search direct child nodes.
+			for node in bs.children:
+				if not isinstance(node, NavigableString):
+					self._parsePosition(node, pos)
 		
-		# ensure that position is never less than 0, or greater than 100
 		for p in pos:
+			# ensure that position is never less than 0, or greater than 100
 			if pos[p] is None: continue
 			if pos[p] < 0: pos[p] = 0
 			if pos[p] > 100: pos[p] = 100
+		
+		# make sure we don't run off of the side of the screen.
+		if pos['width']+pos['left'] > 100:
+			pos['width'] = 100 - pos['left']
+
+		if pos['height']+pos['top'] > 100:
+			pos['height'] = 100 - pos['top']
 
 		return pos
 	
@@ -120,29 +185,18 @@ class HtmlParser:
 	
 	# Parse out the jpg files for the given presentation
 	def parseJPG(self, ppt, path):
-		PARSE_VERSION = 1 # Way for force updating db on algorithm changes
 		files = os.listdir(path)
 		
+		# Delete all old JPG records in the db.
+		[jpg.delete() for jpg in PptJpg.objects.filter(ppt_id=ppt.id)]
+
 		for i in files:
 			if not i[-4:] == '.JPG': continue
 			
-			# Exists?
-			jpg = PptJpg.objects.filter(ppt_id=ppt.id,filename=i)
-			if jpg.count() > 0 and jpg[0].parseVersion == PARSE_VERSION:
-				if self.debug: print 'Already processed PptJpg for ' + str(ppt.id) + ' - ' + jpg[0].filename
-				continue
-			
-			# Create/filter
-			if jpg.count() > 0:
-				jpg = jpg[0]
-			else:
-				jpg = PptJpg()
-			
-			# Update
+			jpg = PptJpg()
 			jpg.ppt_id = ppt.id
 			jpg.filename = i
 			self._parseImage(path, i, jpg)
-			jpg.parseVersion = PARSE_VERSION
 			jpg.save()
 			if self.debug: print 'Parsed PptJpg for ' + str(ppt.id) + ' - ' + jpg.filename
 	
@@ -168,18 +222,17 @@ class HtmlParser:
 	
 	
 	def parseHTML(self, ppt, path):
-		PARSE_VERSION = 1 # Way for force updating db on algorithm changes
 		# Find Html Files 
 		files = os.listdir(path)
 		
-		indexes = []
+		outline = None
 		pages = []
 		images = []
 		
 		for filename in files:
 			fl = filename.lower()
-			if fnmatch.fnmatch(fl, '.htm'):
-				indexes.append(filename)
+			if fnmatch.fnmatch(fl, 'outline.htm'):
+				outline = filename
 			if fnmatch.fnmatch(fl, 'slide????.htm'):
 				pages.append(filename)
 			elif fnmatch.fnmatch(fl, 'slide????_image*'):
@@ -189,34 +242,30 @@ class HtmlParser:
 			elif fnmatch.fnmatch(fl, 'master*_image*'):
 				images.append(filename)
 		
+		# Delete all old html records in the db.
+		PptHtmlImage.objects.filter(ppt_id=ppt.id).delete()
+		for p in PptHtmlPage.objects.filter(ppt_id=ppt.id):
+			[p.delete() for p in p.ppthtmlpagepoint_set.all()]
+			[p.delete() for p in p.ppthtmlpagesrc_set.all()]
+			[p.delete() for p in p.ppthtmlpagetext_set.all()]
+			p.delete()
+
+
 		### Find Html Image File Properties
 		for filename in images:
 			
-			# Exists?
-			img = PptHtmlImage.objects.filter(ppt_id=ppt.id,filename=filename)
-			if img.count() > 0 and img[0].parseVersion == PARSE_VERSION:
-				if self.debug: print 'Already processed PptHtmlImage for ' + str(ppt.id) + ' - ' + img[0].filename
-				continue
-			
-			# New or exists?
-			if img.count() > 0:
-				img = img[0]
-			else:
-				img = PptHtmlImage()
-			
-			# Update
+			img = PptHtmlImage()
+			img.template = (filename[0:6] == 'master') # is this a background image?
 			img.ppt_id = ppt.id
 			img.filename = filename
 			self._parseImage(path, filename, img)
-			img.parseVersion = PARSE_VERSION
+
 			img.save()
 			if self.debug: print 'Parsed PptHtmlImage for ' + str(ppt.id) + ' - ' + img.filename
 		
-		
+
 		### begin parsing textual properties
 		for filename in pages:
-			#html = open(path+p, 'r').read()
-			#html = html.decode('windows-1252')
 			
 			# Try to fix encoding issue.  PPT appears to use meta tag saying that it uses CP1252
 			fh = codecs.open(path+filename,'r', 'windows-1252')
@@ -225,32 +274,18 @@ class HtmlParser:
 			# use html5lib instead of default to avoid problems with img tags not being self-closing.
 			bs = BeautifulSoup(html, 'html5lib') 
 			
+			pptHtmlPage = PptHtmlPage()
+			pptHtmlPage.ppt_id = ppt.id
+			pptHtmlPage.filename = filename 
+			pptHtmlPage.pagetype = 'S'  # slide type
+			pptHtmlPage.md5 = self._getMD5(html)
+			pptHtmlPage.html = html
+			pptHtmlPage.title = '' # Set by outline parser code
+			pptHtmlPage.order = None # Set by outline parser code. 
+			pptHtmlPage.save()
+			if self.debug: print 'Parsed PptHtmlPage for ' + str(ppt.id) + ' - ' + pptHtmlPage.filename
+		
 			
-			# Setup html page first.
-			# Exists?
-			pptHtmlPage = PptHtmlPage.objects.filter(ppt_id=ppt.id,filename=filename)
-			if pptHtmlPage.count() > 0 and pptHtmlPage[0].parseVersion == PARSE_VERSION:
-				pptHtmlPage = pptHtmlPage[0]
-				if self.debug: print 'Already processed PptHtmlPage for ' + str(ppt.id) + ' - ' + pptHtmlPage.filename
-			else:
-				
-				# Update / Create
-				if pptHtmlPage.count() > 0:
-					pptHtmlPage = pptHtmlPage[0]
-				else:
-					pptHtmlPage = PptHtmlPage()
-				
-				# Update information
-				pptHtmlPage.ppt_id = ppt.id
-				pptHtmlPage.filename = filename 
-				pptHtmlPage.pagetype = 'S'  # slide type
-				pptHtmlPage.md5 = self._getMD5(html)
-				pptHtmlPage.parseVersion = PARSE_VERSION
-				pptHtmlPage.html = html
-				pptHtmlPage.save()
-				if self.debug: print 'Parsed PptHtmlPage for ' + str(ppt.id) + ' - ' + pptHtmlPage.filename
-			
-						
 			# Add a link for every image found on the page.
 			images = bs.find_all('img')
 			for img in images:
@@ -263,23 +298,11 @@ class HtmlParser:
 
 				# Find matching actual image entry and then add to page.
 				pptHtmlImage = PptHtmlImage.objects.get(ppt_id=ppt.id, filename=src)
-				pptHtmlPageSrc = PptHtmlPageSrc.objects.filter(
-						ppthtmlpage_id=pptHtmlPage.id, ppthtmlimage_id=pptHtmlImage.id
-				)
-				if pptHtmlPageSrc.count() > 0 and pptHtmlPageSrc[0].parseVersion == PARSE_VERSION:
-					if self.debug: print 'Already processed PptHtmlPageSrc for ' + str(ppt.id) + ' - ' + src 
-					continue
-				
-				if pptHtmlPageSrc.count() > 0:
-					pptHtmlPageSrc = pptHtmlPageSrc[0]
-				else:
-					pptHtmlPageSrc = PptHtmlPageSrc()
-				
+				pptHtmlPageSrc = PptHtmlPageSrc()
 				pptHtmlPageSrc.pos_left = pos['left']
 				pptHtmlPageSrc.pos_top = pos['top']
 				pptHtmlPageSrc.pos_height = pos['height']
 				pptHtmlPageSrc.pos_width= pos['width']
-				pptHtmlPageSrc.parseVersion = PARSE_VERSION
 				pptHtmlPageSrc.ppthtmlpage_id = pptHtmlPage.id 
 				pptHtmlPageSrc.ppthtmlimage_id = pptHtmlImage.id
 				pptHtmlPageSrc.save()
@@ -288,11 +311,14 @@ class HtmlParser:
 			
 			def text_filter(tag):
 				if not tag.name == 'div': return False
-				if tag.has_key('class'):
+
+				if tag.has_key('class'):  # Listing every possibility getting too hard to do.
 					if 'O' in tag['class']: return True # Bullet point
 					if 'CT' in tag['class']: return True # Title 
 					if 'CB' in tag['class']: return True # Sub-title 
 					if 'T' in tag['class']: return True # Sub-title side bold? 
+					if 'B' in tag['class']: return True # Sub-title side bold? 
+					if 'B1' in tag['class']: return True # Sub-point bold.
 				return False
 			
 			# Add each text snip
@@ -302,29 +328,15 @@ class HtmlParser:
 				text = text.replace('\r','').replace('\n','').strip().encode('utf-8')
 				
 				if len(text) > 0:
-					pos = self._parsePosition(d)
-					md5 = self._getMD5(text)
-					
-					pptHtmlPageText = PptHtmlPageText.objects.filter(
-							md5=md5, ppthtmlpage_id = pptHtmlPage.id, pos_left=pos['left'], pos_top=pos['top']
-					)
-					if pptHtmlPageText.count() > 0 and pptHtmlPageText[0].parseVersion == PARSE_VERSION:
-						if self.debug: print 'Already processed PptHtmlPageText for ' + str(pptHtmlPage.id) + ' - ' + text 
-						continue
-					
-					if pptHtmlPageText.count() > 0:
-						pptHtmlPageText = pptHtmlPageText[0]
-					else:
-						pptHtmlPageText = PptHtmlPageText()
-					
+					pptHtmlPageText = PptHtmlPageText()
 					pptHtmlPageText.ppthtmlpage_id = pptHtmlPage.id
-					pptHtmlPageText.md5 = md5
+					pptHtmlPageText.md5 = self._getMD5(text)
 					pptHtmlPageText.text = text
+					pos = self._parsePosition(d)
 					pptHtmlPageText.pos_top = pos['top']
 					pptHtmlPageText.pos_left = pos['left']
 					pptHtmlPageText.pos_height = pos['height']
 					pptHtmlPageText.pos_width= pos['width']
-					pptHtmlPageText.parseVersion = PARSE_VERSION
 					
 					pptHtmlPageText.save()
 					if self.debug: print 'Created PptHtmlPageText for ' + str(pptHtmlPage.id) + ' - ' + text
@@ -332,7 +344,82 @@ class HtmlParser:
 			
 			if self.debug: print "Finished parsing file"
 		
-		if self.debug: print "Finished parsing file"
+
+
+		### parse outline ###
+		if not outline is None:
+			# Try to fix encoding issue.  PPT appears to use meta tag saying that it uses CP1252
+			fh = codecs.open(path+outline,'r', 'windows-1252')
+			html = fh.read()
+			html = html.encode('utf-8') # database default encoding.
+			# use html5lib instead of default to avoid problems with img tags not being self-closing.
+			bs = BeautifulSoup(html, 'html5lib') 
+
+			# Cache of slide ids to relate the titles to the bullets (which are in different parts of the html)
+			slides = {}
+
+			# Restrict search to just the table.
+			for table in bs.find_all(id='OtlObj'):
+
+				# Find the titles of each slide.
+				for link in table.find_all('div', 'PTxt'):
+
+					# Title of slide.
+					title = prettyString(link.text)
+					order = parseInt(link.get('id'))
+
+					# find the filename from the single a link.
+					for a in link.find_all('a')[0:1]:
+						
+						# Parse out slide0001.htm from the javascript code in href.
+						filename = a.get('href') 
+						regfilename = re.search("(slide\d{4}.htm)", filename)
+						if regfilename is None:
+							continue
+						else:
+							filename = regfilename.group()
+
+						# Find the matching htmlpage & update its title & order
+						pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt.id, filename=filename)
+						if len(pptHtmlPages) > 0:
+							pptHtmlPages[0].order = order
+							pptHtmlPages[0].title = title
+							pptHtmlPages[0].setjpg() # now that we have an order, we can find the right jpg file.
+							pptHtmlPages[0].save()
+							slides[order] = pptHtmlPages[0]
+							if self.debug: print "Updated pptHtmlPage data from outline = %s, %s" % (title, order)
+						else:
+							if self.debug: print "ERROR: Unable to find pptHtmlPage %s, %s" % (ppt.id, filename)
+
+					#if self.debug: print "SLIDE " + link.get('id'), title, filename, order
+
+				for bullet in table.find_all('div', 'CTxt'):
+
+					order = parseInt(bullet.get('id')) # use to find slide by its order no.
+					i = -1 # track order of bullets
+
+					for li in bullet.find_all('li'):
+
+						text = prettyString(li.text)
+						i = i + 1
+
+						# find matching slide
+						if order not in slides:
+							if self.debug: print "ERROR: Unable to find slide for bullet %s, %s" % (order, text)
+							continue
+						else:
+							slide = slides[order]
+
+						pptHtmlPagePoint = PptHtmlPagePoint()
+						pptHtmlPagePoint.ppthtmlpage_id = slide.id
+						pptHtmlPagePoint.text = text
+						pptHtmlPagePoint.order = i
+						pptHtmlPagePoint.save()
+						if self.debug: print "Created PptHtmlPagePoint %s, %s, %s" % (pptHtmlPagePoint.id, text, order)
+
+
+
+		if self.debug: print "Finished parsing html export"
 
 
 

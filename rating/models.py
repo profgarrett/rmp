@@ -56,8 +56,8 @@ class PptUploadedFile(models.Model):
 	STATUS = (
 				(u'0', u'Not processed'),
 				(u'1', u'Started'),
-				(u'E', u'Error'),
 				(u'2', u'Converted'),
+				(u'E', u'Error'),
 		)
 	
 	# Only allow alpha, numeric, and . in filename w max len of 70
@@ -70,8 +70,10 @@ class PptUploadedFile(models.Model):
 	ppt = models.ForeignKey(Ppt)
 	file = models.FileField(upload_to=getuploadedpath)
 	
-	exported_to_jpg = models.CharField(max_length=1, choices=STATUS)
-	exported_to_html = models.CharField(max_length=1, choices=STATUS)
+	jpg_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
+	jpg_parse_version = models.SmallIntegerField(blank=True)
+	html_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
+	html_parse_version = models.SmallIntegerField(blank=True)
 	
 	
 	def __unicode__(self):
@@ -80,12 +82,11 @@ class PptUploadedFile(models.Model):
 
 # Model for storing results of parsing html
 class PptJpg(models.Model):
-	parseVersion = models.SmallIntegerField()
 	md5 = models.CharField(max_length=255)
 	filename = models.CharField(max_length=255)
 	size = models.IntegerField()
-	height = models.IntegerField()
-	width = models.IntegerField()
+	height = models.IntegerField(blank=True)
+	width = models.IntegerField(blank=True)
 	
 	ppt = models.ForeignKey(Ppt)
 	
@@ -108,12 +109,12 @@ class PptJpg(models.Model):
 
 # Model for storing results of parsing html
 class PptHtmlImage(models.Model):
-	parseVersion = models.SmallIntegerField()
 	md5 = models.CharField(max_length=255)
 	filename = models.CharField(max_length=255)
 	size = models.IntegerField()
-	height = models.IntegerField()
-	width = models.IntegerField()
+	height = models.IntegerField(blank=True)
+	width = models.IntegerField(blank=True)
+	template = models.BooleanField()
 	
 	ppt = models.ForeignKey(Ppt)
 	
@@ -127,7 +128,6 @@ class PptHtmlImage(models.Model):
 
 # Model for storing results of parsing html
 class PptHtmlPage(models.Model):
-	parseVersion = models.SmallIntegerField()
 	HTML_TYPES = (
 				(u'M', u'Master'),
 				(u'S', u'Slide'),
@@ -138,27 +138,25 @@ class PptHtmlPage(models.Model):
 	filename = models.CharField(max_length=255)
 	pagetype = models.CharField(max_length=1, choices=HTML_TYPES)
 	html = models.TextField()
+	title = models.TextField()
+	order = models.IntegerField(blank=True)
+
 	ppt = models.ForeignKey(Ppt)
-	
-	_cache = None
+	# note: not all html slides have a corresponding jpg slide.  if a slide is empty, it doesn't always
+	# get exported as an image.  
+	pptjpg = models.ForeignKey(PptJpg, blank=True) 
 
-	def jpg(self):
-		if self._cache == None: self._cache = {}
+	# Setting the jpg reference requires having an order.  The filename doesn't tell us anything about the
+	# order of the slides, as they can be re-arranged, deleted, etc...  Relies upon knowing order from the 
+	# parser looking at the outline file.
+	def setjpg(self):
 
-		if '_jpg' not in self._cache:
-			filename = 'Slide%s.JPG' % self.order()
+		if self.pptjpg_id is None and not self.order is None:
+			filename = 'Slide%s.JPG' % self.order
 			jpg = PptJpg.objects.filter(ppt_id=self.ppt_id,filename=filename)
 			if len(jpg) > 0:
-				self._cache['jpg'] = jpg[0]
-			else:
-				self._cache['jpg'] = None
+				self.pptjpg = jpg[0]
 
-		return self._cache['jpg']
-
-
-	def order(self):
-		return parseInt(self.filename)
-	
 	def get_absolute_url(self):
 		user = self.ppt.user
 		return "/user/%s/ppt/%s/img/%s" % (user.username, self.ppt_id, self.filename)
@@ -167,10 +165,18 @@ class PptHtmlPage(models.Model):
 		return '<PptHtmlPage %s, %s, %s, %s>' % (self.id, self.pagetype, self.filename, self.ppt)
 
 
+# Model for storing parsed points from the outline file.
+class PptHtmlPagePoint(models.Model):
+	text = models.TextField()
+	order = models.IntegerField()
+	ppthtmlpage = models.ForeignKey(PptHtmlPage)
+
+	def __unicode__(self):
+		return '<PptHtmlPagePoint %s, %s, %s>' % (self.id, self.text, self.ppthtmlpage)
+
+
 # Model for storing results of parsing html
 class PptHtmlPageSrc(models.Model):
-	parseVersion = models.SmallIntegerField()
-	
 	ppthtmlpage = models.ForeignKey(PptHtmlPage)
 	ppthtmlimage = models.ForeignKey(PptHtmlImage)
 	
@@ -188,7 +194,6 @@ class PptHtmlPageSrc(models.Model):
 
 # Model for storing results of parsing html
 class PptHtmlPageText(models.Model):
-	parseVersion = models.SmallIntegerField()
 	md5 = models.CharField(max_length=255)
 	text = models.TextField()
 	

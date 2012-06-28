@@ -90,16 +90,25 @@ class ScaledPage():
 		self.HEIGHT = 0  # set in set_jpg, as we don't know aspect ratio yet.
 
 		self.page = pptHtmlPage
-		jpg = self.page.jpg()
-		if jpg is None:
-			 print 'Unable to find', pptHtmlPage, jpg
-		else:
-			self.set_jpg(jpg)
-			self.set_src()
-			self.set_text()
-	
+		self.title = pptHtmlPage.title
+		self.order = pptHtmlPage.order
+		self.set_jpg()
+		self.set_src()
+		self.set_text()
+		self.set_points()
 
-	def set_jpg(self, jpg):
+	def set_points(self):
+		self.points = []
+		for point in self.page.ppthtmlpagepoint_set.order_by('order').all():
+			self.points.append(point.text)
+
+	def set_jpg(self):
+
+		if self.page.pptjpg_id is None:
+			self.jpg = None
+			return
+
+		jpg = self.page.pptjpg
 		self.RATIO = (1.0 * self.WIDTH) / jpg.width
 		self.HEIGHT =  self.RATIO * jpg.height
 		
@@ -119,6 +128,7 @@ class ScaledPage():
 				'width': int(src.pos_width * self.WIDTH / 100),
 				'left': int(src.pos_left * self.WIDTH / 100),
 				'top': int(src.pos_top * self.HEIGHT / 100),
+				'template': src.ppthtmlimage.template,
 			}) 
 
 	# Convert texts into a nice format. Note that measurements are by %
@@ -143,14 +153,13 @@ def user_ppt_view_metadata(request, username, ppt_id):
 	
 	ratings = PptRating.objects.filter(ppt_id=ppt_id)
 	pptuploadedfiles = PptUploadedFile.objects.filter(ppt_id=ppt_id)
-	#jpgs = ppt.jpgs()
 	
 	# Make sure that we have parsed the file...
 	filepath  = '%suserfiles/pptfile/%s/%s/' % (settings.PPT_FILEPATH, user.id, ppt_id)
 	parser = HtmlParser(ppt, filepath, True)
 	
 	#pptHtmlImages = PptHtmlImage.objects.filter(ppt_id=ppt_id)
-	pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt_id).all()
+	pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt_id).order_by('order').all()
 
 	return render_to_response('rating/user_ppt_view_metadata.html',
 			{	'user': user,
