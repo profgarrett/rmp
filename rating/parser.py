@@ -65,12 +65,30 @@ class HtmlParser:
 
 	# Used to track logs for the process.
 	# Note that on Windows, the console can onlu read ASCII characters, so strip out unicode.
-	def _log(self, s, tuple, error=False):
-		s = s.encode('ascii', 'ignore') % tuple
-		if self._debug:
-			print s
-
-
+	def _log(self, s, tup, error=False):
+		
+		#encode arguments and formatting string
+		args = []
+		ascii = self._ascii(s) # unicode(s, 'UTF-8').encode('ascii', 'ignore')
+		for i in range(len(tup)):
+			if hasattr(tup[i],'encode'): 
+				# String
+				args.append(self._ascii(tup[i]))
+			else: 
+				# integer / long
+				args.append(tup[i])
+		
+		if self.debug:
+			print ascii % tuple(args)
+	
+	# Return a safe ascii string for printing to the console.
+	def _ascii(self, arg):
+		
+		if isinstance(arg, unicode):
+			return arg.encode('ascii', 'ignore')
+		else:
+			return arg.decode('ascii', 'ignore')
+	
 	def _parseSrc(self, img):
 		
 		if 'src' in img.attrs:
@@ -263,9 +281,12 @@ class HtmlParser:
 		for p in PptHtmlPage.objects.filter(ppt_id=ppt.id):
 			if not p.id == None:
 				id = p.id
-				[p.delete() for p in p.ppthtmlpagepoint_set.all()]
-				[p.delete() for p in p.ppthtmlpagesrc_set.all()]
-				[p.delete() for p in p.ppthtmlpagetext_set.all()]
+				for p in p.ppthtmlpagepoint_set.all():
+					if not p.id == None: p.delete() 
+				for p in p.ppthtmlpagesrc_set.all():
+					if not p.id == None: p.delete() 
+				for p in p.ppthtmlpagetext_set.all():
+					if not p.id == None: p.delete() 
 				p.delete()
 
 
@@ -424,7 +445,3 @@ class HtmlParser:
 
 
 		self._log("Finished parsing html export %s",("",)) 
-
-
-
-
