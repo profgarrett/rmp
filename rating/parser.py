@@ -54,6 +54,17 @@ class HtmlParser:
 	## Utility functions
 	####################
 	
+	# Open a file and return a proper BeautifulSoup object.
+	def _open(self, filename):
+		# Try to fix encoding issue.  PPT appears to use meta tag saying that it uses CP1252
+		fh = codecs.open(filename,'r', 'windows-1252')
+		html = fh.read()
+		#html = html.encode('utf-8') # database default encoding.
+		# use html5lib instead of default to avoid problems with img tags not being self-closing.
+		return BeautifulSoup(html, 'html5lib', from_encoding="windows-1252") 
+
+
+
 	def _parseSrc(self, img):
 		
 		if 'src' in img.attrs:
@@ -245,10 +256,12 @@ class HtmlParser:
 		# Delete all old html records in the db.
 		PptHtmlImage.objects.filter(ppt_id=ppt.id).delete()
 		for p in PptHtmlPage.objects.filter(ppt_id=ppt.id):
-			[p.delete() for p in p.ppthtmlpagepoint_set.all()]
-			[p.delete() for p in p.ppthtmlpagesrc_set.all()]
-			[p.delete() for p in p.ppthtmlpagetext_set.all()]
-			p.delete()
+			if not p.id == None:
+				id = p.id
+				[p.delete() for p in p.ppthtmlpagepoint_set.all()]
+				[p.delete() for p in p.ppthtmlpagesrc_set.all()]
+				[p.delete() for p in p.ppthtmlpagetext_set.all()]
+				p.delete()
 
 
 		### Find Html Image File Properties
@@ -266,14 +279,9 @@ class HtmlParser:
 
 		### begin parsing textual properties
 		for filename in pages:
-			
-			# Try to fix encoding issue.  PPT appears to use meta tag saying that it uses CP1252
-			fh = codecs.open(path+filename,'r', 'windows-1252')
-			html = fh.read()
-			html = html.encode('utf-8') # database default encoding.
-			# use html5lib instead of default to avoid problems with img tags not being self-closing.
-			bs = BeautifulSoup(html, 'html5lib') 
-			
+			bs = self._open(path+filename)
+			html = bs.prettify()
+
 			pptHtmlPage = PptHtmlPage()
 			pptHtmlPage.ppt_id = ppt.id
 			pptHtmlPage.filename = filename 
@@ -348,12 +356,7 @@ class HtmlParser:
 
 		### parse outline ###
 		if not outline is None:
-			# Try to fix encoding issue.  PPT appears to use meta tag saying that it uses CP1252
-			fh = codecs.open(path+outline,'r', 'windows-1252')
-			html = fh.read()
-			html = html.encode('utf-8') # database default encoding.
-			# use html5lib instead of default to avoid problems with img tags not being self-closing.
-			bs = BeautifulSoup(html, 'html5lib') 
+			bs = self._open(path+outline)
 
 			# Cache of slide ids to relate the titles to the bullets (which are in different parts of the html)
 			slides = {}
