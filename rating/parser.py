@@ -63,6 +63,12 @@ class HtmlParser:
 		# use html5lib instead of default to avoid problems with img tags not being self-closing.
 		return BeautifulSoup(html, 'html5lib', from_encoding="windows-1252") 
 
+	# Used to track logs for the process.
+	# Note that on Windows, the console can onlu read ASCII characters, so strip out unicode.
+	def _log(self, s, tuple, error=False):
+		s = s.encode('ascii', 'ignore') % tuple
+		if self._debug:
+			print s
 
 
 	def _parseSrc(self, img):
@@ -70,7 +76,7 @@ class HtmlParser:
 		if 'src' in img.attrs:
 			return img.attrs['src']
 		
-		if self.debug: print 'Error: img without src for ', img 
+		self.log('Error: img without src for %s', (img), True)
 		return '' 
 	
 	def _getHash(self, path):
@@ -209,7 +215,7 @@ class HtmlParser:
 			jpg.filename = i
 			self._parseImage(path, i, jpg)
 			jpg.save()
-			if self.debug: print 'Parsed PptJpg for ' + str(ppt.id) + ' - ' + jpg.filename
+			self._log('Parsed PptJpg for %s, %s', (ppt.id, jpg.filename))
 	
 	
 	# Update the passed model with the image properties.
@@ -227,9 +233,8 @@ class HtmlParser:
 			
 		except IOError as detail:
 			# Invalid image format, e.g., wmz or some other strange thing
-			if self.debug: print detail
 			if detail.args[0] != 'cannot identify image file':
-				print ('ERROR: ', detail)
+				self._log('_parseImage Error %s', (detail), True)
 	
 	
 	def parseHTML(self, ppt, path):
@@ -274,7 +279,7 @@ class HtmlParser:
 			self._parseImage(path, filename, img)
 
 			img.save()
-			if self.debug: print 'Parsed PptHtmlImage for ' + str(ppt.id) + ' - ' + img.filename
+			self._log('Parsed PptHtmlImage for %s, %s', (ppt.id, img.filename))
 		
 
 		### begin parsing textual properties
@@ -291,7 +296,7 @@ class HtmlParser:
 			pptHtmlPage.title = '' # Set by outline parser code
 			pptHtmlPage.order = None # Set by outline parser code. 
 			pptHtmlPage.save()
-			if self.debug: print 'Parsed PptHtmlPage for ' + str(ppt.id) + ' - ' + pptHtmlPage.filename
+			self._log('Parsed PptHtmlPage for %s, %s', (ppt.id, pptHtmlPage.filename))
 		
 			
 			# Add a link for every image found on the page.
@@ -314,7 +319,7 @@ class HtmlParser:
 				pptHtmlPageSrc.ppthtmlpage_id = pptHtmlPage.id 
 				pptHtmlPageSrc.ppthtmlimage_id = pptHtmlImage.id
 				pptHtmlPageSrc.save()
-				if self.debug: print 'Parsed pptHtmlPageSrc for ' + str(pptHtmlPage.id) + ' - ' + src 
+				self._log('Parsed pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src ))
 			
 			
 			def text_filter(tag):
@@ -347,10 +352,9 @@ class HtmlParser:
 					pptHtmlPageText.pos_width= pos['width']
 					
 					pptHtmlPageText.save()
-					if self.debug: print 'Created PptHtmlPageText for ' + str(pptHtmlPage.id) + ' - ' + text
+					self._log('Created PptHtmlPageText for %s, %s', (pptHtmlPage.id, text))
 			
-			
-			if self.debug: print "Finished parsing file"
+			self._log('Finished parsing file %s', ('',))
 		
 
 
@@ -390,11 +394,9 @@ class HtmlParser:
 							pptHtmlPages[0].setjpg() # now that we have an order, we can find the right jpg file.
 							pptHtmlPages[0].save()
 							slides[order] = pptHtmlPages[0]
-							if self.debug: print "Updated pptHtmlPage data from outline = %s, %s" % (title, order)
+							self._log("Updated pptHtmlPage data from outline = %s, %s", (title, order))
 						else:
-							if self.debug: print "ERROR: Unable to find pptHtmlPage %s, %s" % (ppt.id, filename)
-
-					#if self.debug: print "SLIDE " + link.get('id'), title, filename, order
+							self._log("ERROR: Unable to find pptHtmlPage %s, %s", (ppt.id, filename), True)
 
 				for bullet in table.find_all('div', 'CTxt'):
 
@@ -408,7 +410,7 @@ class HtmlParser:
 
 						# find matching slide
 						if order not in slides:
-							if self.debug: print "ERROR: Unable to find slide for bullet %s, %s" % (order, text)
+							self._log("ERROR: Unable to find slide for bullet %s, %s", (order, text), True)
 							continue
 						else:
 							slide = slides[order]
@@ -418,11 +420,10 @@ class HtmlParser:
 						pptHtmlPagePoint.text = text
 						pptHtmlPagePoint.order = i
 						pptHtmlPagePoint.save()
-						if self.debug: print "Created PptHtmlPagePoint %s, %s, %s" % (pptHtmlPagePoint.id, text, order)
+						self._log("Created PptHtmlPagePoint %s, %s, %s", (pptHtmlPagePoint.id, text, order))
 
 
-
-		if self.debug: print "Finished parsing html export"
+		self._log("Finished parsing html export %s",("",)) 
 
 
 
