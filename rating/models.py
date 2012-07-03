@@ -6,29 +6,17 @@ import os
 from rating.utility import parseInt
 from django.conf import settings
 
-if False:
-	class Unit(models.Model):
-		UNIT_TYPES = (
-				(u'Book', u'Book'),
-				(u'Website', u'Website'),
-				(u'PearsonBookFile', u'PearsonBookFile'),
-				(u'MoodleCourse', u'MoodleCourse'),
-		)
-		
-		title = models.CharField(max_length=254)
-		unittype = models.CharField(max_length=254, choices=UNIT_TYPES)
-		
-		def __unicode__(self):
-			return "<Unit %s, %s,%s>" % (self.id, self.title, self.unittype)
 
+### TODO
+# Remove column old_id from rating_pptunit (refers to id in ppt db)
 
 class Ppt(models.Model):
 	filename = models.CharField(max_length=240)
 	folder = models.CharField(max_length=240)
 	rnd = models.IntegerField()
-	source_url = models.TextField()
+	source_url = models.CharField(max_length=240)
 	
-	unit_id = models.IntegerField() #models.ForeignKey(Unit)
+	unit_id = models.IntegerField() # OLD, use m2m reference now. 
 	user = models.ForeignKey(User)
 	
 	def jpgs(self):
@@ -61,11 +49,11 @@ class PptUploadedFile(models.Model):
 		)
 	
 	# Only allow alpha, numeric, and . in filename w max len of 70
-	def getuploadedpath(instance, filename):
+	def getuploadedpath(instance, filename=None):
 		valid = '.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 		filename = ''.join(c for c in filename if c in valid)
 		filename = filename[:70] 
-		return 'pptfile/%s/%s/%s' % (instance.ppt.user_id, instance.ppt.id, filename )
+		return 'pptfile/%s/%s/%s' % (instance.ppt.user_id, instance.id, filename )
 	
 	ppt = models.ForeignKey(Ppt)
 	file = models.FileField(upload_to=getuploadedpath)
@@ -75,7 +63,9 @@ class PptUploadedFile(models.Model):
 	html_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
 	html_parse_version = models.SmallIntegerField(blank=True)
 	
-	
+	def get_absolute_path(self):
+		return '%suserfiles/%s' % (settings.PPT_FILEPATH, self.file.name)
+		
 	def __unicode__(self):
 		return '<PptUploadedFile %s, %s, %s>' % (self.id, self.ppt.id, self.ppt.user.username)
 
@@ -209,9 +199,47 @@ class PptHtmlPageText(models.Model):
 
 
 
+class PptUnit(models.Model):
+	UNIT_TYPES = (
+			(u'Book', u'Book'),
+			(u'Website', u'Website'),
+			(u'PearsonBookFile', u'PearsonBookFile'),
+			(u'MoodleCourse', u'MoodleCourse'),
+	)
+	title = models.CharField(max_length=200, db_index=True)
+	unittype = models.CharField(max_length=254, choices=UNIT_TYPES, blank=True)
+	description = models.TextField()
+	url = models.TextField()
+
+	ppts = models.ManyToManyField(Ppt)
+
+	def get_absolute_url(self):
+		return '/unit/%s/' % (self.id,)
+
+	def __unicode__(self):
+		return "<PptUnit %s, %s >" % (self.id, self.title)
+
+
+
+class PptUnitTag(models.Model):
+	unit = models.ForeignKey(PptUnit)
+	tag = models.CharField(max_length=200, db_index=True)
+
+
+	def get_absolute_url(self):
+		return '/tag/%s/' % (self.tag,)
+	
+
+	def __unicode__(self):
+		return "<PptUnitTag %s %s>" % (self.unit, self.tag)
+
+
 class PptTag(models.Model):
 	ppt = models.ForeignKey(Ppt)
 	tag = models.CharField(max_length=200, db_index=True)
+	
+	def get_absolute_url(self):
+		return '/tag/%s/' % (self.tag,)
 	
 	def __unicode__(self):
 		return "<PptTag %s %s>" % (self.ppt, self.tag)

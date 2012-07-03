@@ -20,8 +20,12 @@ class HtmlParser:
 	PARSE_VERSION = 1 # Way for force updating db on algorithm changes
 	
 	def __init__(self, ppt, path, debug=False):
+
+		# remove the trailing file name from the path.
+		path = os.path.dirname(path)
+
 		self.ppt = ppt
-		self.path = path # Where is the html folder?
+		self.path = path # Where is the folder?
 		self.debug = debug # print debug statements?
 		
 		# Strip trailing slash
@@ -33,14 +37,13 @@ class HtmlParser:
 		
 		# Find uploaded files.
 		for p in PptUploadedFile.objects.filter(ppt_id=ppt.id):
-			
-			if p.jpg_export_status == '2' and (debug or p.jpg_parse_version < self.PARSE_VERSION):
+			if p.jpg_export_status == '2' and (debug or p.jpg_parse_version is None or p.jpg_parse_version < self.PARSE_VERSION):
 				if os.path.exists(self.path+'/jpg'):
 					self.parseJPG(ppt, self.path+'/jpg/')
 					p.jpg_parse_version = self.PARSE_VERSION
 					p.save()
 
-			if p.html_export_status == '2' and (debug or p.html_parse_version < self.PARSE_VERSION):
+			if p.html_export_status == '2' and (debug or p.html_parse_version is None or p.html_parse_version < self.PARSE_VERSION):
 				if os.path.exists(self.path+'/html_files'):
 					self.parseHTML(ppt, self.path+'/html_files/')
 					p.html_parse_version = self.PARSE_VERSION

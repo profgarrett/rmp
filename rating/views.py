@@ -2,7 +2,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.contrib import auth
-from django.contrib.auth import forms
+from django.contrib.auth import forms, models
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.conf import settings
@@ -13,7 +13,7 @@ import random
 from rating.models import *
 from rating.forms import *
 from rating.parser import HtmlParser
-
+from rating.utility import ScaledPage
 
 @login_required
 def homepage(request):
@@ -82,67 +82,36 @@ def user_ppt_view(request, username, ppt_id):
 	)
 
 
-class ScaledPage():
 
-	def __init__(self, pptHtmlPage, WIDTH):
-		self.WIDTH = WIDTH
-		self.RATIO = 0.0
-		self.HEIGHT = 0  # set in set_jpg, as we don't know aspect ratio yet.
-
-		self.page = pptHtmlPage
-		self.title = pptHtmlPage.title
-		self.order = pptHtmlPage.order
-		self.set_jpg()
-		self.set_src()
-		self.set_text()
-		self.set_points()
-
-	def set_points(self):
-		self.points = []
-		for point in self.page.ppthtmlpagepoint_set.order_by('order').all():
-			self.points.append(point.text)
-
-	def set_jpg(self):
-
-		if self.page.pptjpg_id is None:
-			self.jpg = None
-			return
-
-		jpg = self.page.pptjpg
-		self.RATIO = (1.0 * self.WIDTH) / jpg.width
-		self.HEIGHT =  self.RATIO * jpg.height
+@login_required
+def tag_view(request, tag):
+	ppttags = PptTag.objects.filter(tag=tag)
+	pptunittags = PptUnitTag.objects.filter(tag=tag)
 		
-		self.jpg = {
-			'src': jpg.get_absolute_url(),
-			'height': self.HEIGHT,
-			'width': self.WIDTH,
-		}
+	return render_to_response('rating/tag_view.html',
+			{	'tag': tag,
+				'ppttags': ppttags,
+				'pptunittags': pptunittags 
+			}, context_instance=RequestContext(request)
+	)
 
-	# Convert images to a nice format. Note that measurements are by %.
-	def set_src(self):
-		self.srcs = []
-		for src in self.page.ppthtmlpagesrc_set.all():
-			self.srcs.append({
-				'src': src.get_absolute_url(),
-				'height': int(src.pos_height * self.HEIGHT / 100),
-				'width': int(src.pos_width * self.WIDTH / 100),
-				'left': int(src.pos_left * self.WIDTH / 100),
-				'top': int(src.pos_top * self.HEIGHT / 100),
-				'template': src.ppthtmlimage.template,
-			}) 
+@login_required
+def user_list(request):
+	users = User.objects.all()
+		
+	return render_to_response('rating/user_list.html',
+			{'users': users }, context_instance=RequestContext(request)
+	)
 
-	# Convert texts into a nice format. Note that measurements are by %
-	def set_text(self):
-		self.texts = []
 
-		for text in self.page.ppthtmlpagetext_set.all():
-			self.texts.append({
-				'text': text.text,
-				'height': int(text.pos_height * self.HEIGHT / 100),
-				'width': int(text.pos_width * self.WIDTH / 100),
-				'left': int(text.pos_left * self.WIDTH / 100),
-				'top': int(text.pos_top * self.HEIGHT / 100),
-			})
+@login_required
+def unit_view(request, unit_id):
+	unit = get_object_or_404(PptUnit, id=unit_id)
+		
+	return render_to_response('rating/unit_view.html',
+			{'unit': unit }, context_instance=RequestContext(request)
+	)
+
 
 
 @login_required
@@ -154,11 +123,13 @@ def user_ppt_view_metadata(request, username, ppt_id):
 	ratings = PptRating.objects.filter(ppt_id=ppt_id)
 	pptuploadedfiles = PptUploadedFile.objects.filter(ppt_id=ppt_id)
 	
-	# Make sure that we have parsed the file...
-	filepath  = '%suserfiles/pptfile/%s/%s/' % (settings.PPT_FILEPATH, user.id, ppt_id)
-	parser = HtmlParser(ppt, filepath, True)
-	
-	#pptHtmlImages = PptHtmlImage.objects.filter(ppt_id=ppt_id)
+	# Load parser if we have physicallly uploaded files.
+	if len(pptuploadedfiles) > 0:
+		filepath = pptuploadedfiles[0].get_absolute_path()
+		parser = HtmlParser(ppt, filepath, True)
+	else:
+		raise Http404
+
 	pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt_id).order_by('order').all()
 
 	return render_to_response('rating/user_ppt_view_metadata.html',
@@ -190,6 +161,7 @@ def user_ppt_jpg(request, username, ppt_id, slide):
 	user = get_object_or_404(User, username=username)
 	
 	filepath  = '%suserfiles/pptfile/%s/%s/jpg/Slide%s.JPG' % (settings.PPT_FILEPATH, user.id, ppt_id, slide )
+	print filepath
 	try:
 		f = open(filepath, 'rb')
 		return HttpResponse(f.read())
@@ -210,34 +182,6 @@ def user_ppt_img(request, username, ppt_id, filename):
 		return HttpResponse(f.read())
 	except:
 		raise Http404
-
-
-@login_required
-def XXXXuser_ppt_view(request, username, ppt_id):
-	ppt = get_object_or_404(Ppt, pk=ppt_id)
-	
-	# If me, then show all ratings.  Otherwise, shown own ratings.
-	if request.user.username == 'garrettn':
-		ratings = PptRating.objects.filter(ppt_id=ppt.id)
-	else:
-		ratings = PptRating.objects.filter(ppt_id=ppt.id).filter(user__username=request.user.username)
-	
-	# refactor out jpg access
-	jpg = settings.PPT_FILEPATH + ppt.folder + '/jpg/'
-	if not os.path.exists(jpg):
-		return HttpResponse('No images for this presentation')
-	
-	jpgs = []
-	for j in os.listdir(jpg):
-		if j[-3:] == 'JPG': jpgs.append('/ppt/'+ppt.folder+'/jpg/'+j)
-	
-	return render_to_response('rating/view.html', 
-			{	'username': request.user.username,
-				'jpgs': jpgs,
-				'ppt': ppt,
-				'ratings': ratings.all()
-			},
-			context_instance=RequestContext(request))
 
 
 @login_required
@@ -280,9 +224,6 @@ def user_ppt_upload(request, username):
 	)
 
 
-#@login_required
-#def viewUserPpt(self):
-	
 
 
 

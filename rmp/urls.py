@@ -27,6 +27,7 @@ urlpatterns += patterns('rating.views',
 	url(r'^ppt/random$', 'goto_random'),
 	
 	# User Ppts
+	url(r'^user/$', 'user_list'),
 	url(r'^user/(?P<username>\w+)/$', 'user_view'),
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/$', 'user_ppt_view'),
 	url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/metadata$', 'user_ppt_view_metadata'),
@@ -41,6 +42,14 @@ urlpatterns += patterns('rating.views',
 	
 	# Create
 	url(r'^user/(?P<username>\w+)/ppt/upload$', 'user_ppt_upload'),
+	
+
+	### Units
+	url(r'^unit/(?P<unit_id>\w+)/$', 'unit_view'),
+
+
+	### Tags
+	url(r'^tag/(?P<tag>\w+)/$', 'tag_view'),
 	
 	
 	# Images (OLD FASHION)

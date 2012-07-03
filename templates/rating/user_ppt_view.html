@@ -6,13 +6,33 @@
 
 {% block content %}
 
-<h1>View User {{ user.username }} Presentation {{ ppt.id }}</h1>
-
-
+<h1>View User {{ user.username }} Presentation {{ ppt.id }} / {{ ppt.filename }}</h1>
+<a href="metadata">meta!</a>
 <h2>Uploaded Files</h2>
 <ul>
 {% for ppt in pptuploadedfiles %}
 	<li>{{ ppt.id }}</a></li>
+{% endfor %}
+</ul>
+
+
+<h2>Presentation Tags</h2>
+<ul>
+{% for tag in ppt.ppttag_set.all %}
+	<li><a href="{{ tag.get_absolute_url }}">{{ tag.tag }}</a></li>
+{% endfor %}
+</ul>
+
+<h2>Units</h2>
+<ul>
+{% for unit in ppt.pptunit_set.all %}
+	<li><a href="{{ unit.get_absolute_url }}">{{ unit.title }}</a>
+		<ul>
+		{% for tag in unit.pptunittag_set.all %}
+			<li><a href="{{ tag.get_absolute_url }}">{{ tag.tag }}</a></li>
+		{% endfor %}
+		</ul>
+	</li>
 {% endfor %}
 </ul>
 
