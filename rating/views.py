@@ -68,15 +68,13 @@ def user_ppt_view(request, username, ppt_id):
 	ppt = Ppt.objects.get(user_id=user.id, id=ppt_id)
 	
 	ratings = PptRating.objects.filter(ppt_id=ppt_id)
-	pptuploadedfiles = PptUploadedFile.objects.filter(ppt_id=ppt_id)
 	jpgs = ppt.jpgs()
 	
 	return render_to_response('rating/user_ppt_view.html',
 			{	'user': user,
 				'ppt': ppt,
 				'jpgs': jpgs,
-				'ratings': ratings,
-				'pptuploadedfiles': pptuploadedfiles
+				'ratings': ratings
 			},
 			context_instance=RequestContext(request)
 	)
@@ -119,17 +117,8 @@ def user_ppt_view_metadata(request, username, ppt_id):
 	
 	user = get_object_or_404(User, username=username)
 	ppt = Ppt.objects.get(user_id=user.id, id=ppt_id)
-	
 	ratings = PptRating.objects.filter(ppt_id=ppt_id)
-	pptuploadedfiles = PptUploadedFile.objects.filter(ppt_id=ppt_id)
-	
-	# Load parser if we have physicallly uploaded files.
-	if len(pptuploadedfiles) > 0:
-		filepath = pptuploadedfiles[0].get_absolute_path()
-		parser = HtmlParser(ppt, filepath, True)
-	else:
-		raise Http404
-
+	parser = HtmlParser(ppt, True)
 	pptHtmlPages = PptHtmlPage.objects.filter(ppt_id=ppt_id).order_by('order').all()
 
 	return render_to_response('rating/user_ppt_view_metadata.html',
@@ -190,9 +179,9 @@ def user_ppt_upload(request, username):
 	if request.method == 'POST':
 		
 		pptForm = PptForm(request.POST)
-		pptUploadedFileForm = PptUploadedFileForm(request.POST, request.FILES)
+		pptUploadFileForm = PptUploadFileForm(request.POST, request.FILES)
 		
-		if pptForm.is_valid() and pptUploadedFileForm.is_valid():
+		if pptForm.is_valid() and pptUploadFileForm.is_valid():
 			
 			# Save Ppt record
 			ppt = pptForm.save(commit=False)
@@ -205,20 +194,20 @@ def user_ppt_upload(request, username):
 			pptForm.save_m2m()
 			
 			# Save actual uploaded file
-			pptUploadedFile = pptUploadedFileForm.save(commit=False)
-			pptUploadedFile.ppt = ppt
-			pptUploadedFile.save()
-			pptUploadedFileForm.save_m2m()
+			pptUploadFile = pptUploadFileForm.save(commit=False)
+			pptUploadFile.ppt = ppt
+			pptUploadFile.save()
+			pptUploadFileForm.save_m2m()
 			
 			return HttpResponseRedirect(ppt.get_absolute_url())
 		
 	else:
 		pptForm = PptForm()
-		pptUploadedFileForm = PptUploadedFileForm()
+		pptUploadFileForm = PptUploadFileForm()
 	
 	return render_to_response('rating/upload.html', 
 			{	'pptForm': pptForm, 
-				'pptUploadedFileForm': pptUploadedFileForm
+				'pptUploadFileForm': pptUploadFileForm
 			},
 			context_instance=RequestContext(request)
 	)

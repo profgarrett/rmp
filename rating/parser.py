@@ -19,36 +19,43 @@ from rating.utility import parseInt, prettyString
 class HtmlParser:
 	PARSE_VERSION = 1 # Way for force updating db on algorithm changes
 	
-	def __init__(self, ppt, path, debug=False):
+	def __init__(self, ppt, debug=False):
 
 		# remove the trailing file name from the path.
+		path = 	ppt.get_absolute_filepath()
 		path = os.path.dirname(path)
+
+		# Strip trailing slash (if any)
+		if path[-1:] == '/' or path[-1:] == '\\':
+			path = path[:-1]
+		
+		if not os.path.exists(path):
+			raise Exception('Path %s does not exist.' % (path))
+		
 
 		self.ppt = ppt
 		self.path = path # Where is the folder?
 		self.debug = debug # print debug statements?
 		
-		# Strip trailing slash
-		if self.path[-1:] == '/' or self.path[-1:] == '\\':
-			self.path = self.path[:-1]
-		
-		if not os.path.exists(self.path):
-			raise Exception('Path %s does not exist.' % (self.path))
-		
 		# Find uploaded files.
-		for p in PptUploadedFile.objects.filter(ppt_id=ppt.id):
-			if p.jpg_export_status == '2' and (debug or p.jpg_parse_version is None or p.jpg_parse_version < self.PARSE_VERSION):
-				if os.path.exists(self.path+'/jpg'):
-					self.parseJPG(ppt, self.path+'/jpg/')
-					p.jpg_parse_version = self.PARSE_VERSION
-					p.save()
+		if ppt.jpg_export_status == '2' and (debug or ppt.jpg_parse_version is None or ppt.jpg_parse_version < self.PARSE_VERSION):
+			if os.path.exists(self.path+'/jpg'):
+				self.parseJPG(ppt, self.path+'/jpg/')
+				ppt.jpg_parse_version = self.PARSE_VERSION
+			else:
+				ppt.jpg_parse_version = -1
+			
+			ppt.save()
 
-			if p.html_export_status == '2' and (debug or p.html_parse_version is None or p.html_parse_version < self.PARSE_VERSION):
-				if os.path.exists(self.path+'/html_files'):
-					self.parseHTML(ppt, self.path+'/html_files/')
-					p.html_parse_version = self.PARSE_VERSION
-					p.save()
-				
+		if ppt.html_export_status == '2' and (debug or ppt.html_parse_version is None or ppt.html_parse_version < self.PARSE_VERSION):
+			if os.path.exists(self.path+'/html_files'):
+				self.parseHTML(ppt, self.path+'/html_files/')
+				ppt.html_parse_version = self.PARSE_VERSION
+			else:
+				ppt.html_parse_version = -1
+			
+			ppt.save()
+
 
 
 
@@ -274,38 +281,42 @@ class HtmlParser:
 				pages.append(filename)
 			elif fnmatch.fnmatch(fl, 'slide????_image*'):
 				images.append(filename)
+			elif fnmatch.fnmatch(fl, 'slide????_background*'):
+				images.append(filename)
 			elif fnmatch.fnmatch(fl, 'master*_background*'):
 				images.append(filename)
 			elif fnmatch.fnmatch(fl, 'master*_image*'):
 				images.append(filename)
 		
+
 		# Delete all old html records in the db.
+		# 	Do not use references from the htmlimage to related objects, as sometimes id=None
+		# 	if an error is thrown during parsing (leaving it incomplete)
 		PptHtmlImage.objects.filter(ppt_id=ppt.id).delete()
-		for p in PptHtmlPage.objects.filter(ppt_id=ppt.id):
-			if not p.id == None:
-				id = p.id
-				for p in p.ppthtmlpagepoint_set.all():
-					if not p.id == None: p.delete() 
-				for p in p.ppthtmlpagesrc_set.all():
-					if not p.id == None: p.delete() 
-				for p in p.ppthtmlpagetext_set.all():
-					if not p.id == None: p.delete() 
-				p.delete()
+		htmlpages = PptHtmlPage.objects.filter(ppt_id=ppt.id)
+		for p in htmlpages:
+			PptHtmlPageSrc.objects.filter(ppthtmlpage_id=p.id).delete()
+			PptHtmlPagePoint.objects.filter(ppthtmlpage_id=p.id).delete()
+			PptHtmlPageText.objects.filter(ppthtmlpage_id=p.id).delete()
+
+		PptHtmlImage.objects.filter(ppt_id=ppt.id).delete()
+		htmlpages.delete()
+
 
 
 		### Find Html Image File Properties
 		for filename in images:
 			
 			img = PptHtmlImage()
-			img.template = (filename[0:6] == 'master') # is this a background image?
-			img.ppt_id = ppt.id
 			img.filename = filename
+			img.template = (filename[0:6] == 'master' or 'background.' in filename) # is this a background image?
+			img.vector = img.filename_is_vector()
+			img.ppt_id = ppt.id
 			self._parseImage(path, filename, img)
 
 			img.save()
 			self._log('Parsed PptHtmlImage for %s, %s', (ppt.id, img.filename))
 		
-
 		### begin parsing textual properties
 		for filename in pages:
 			bs = self._open(path+filename)

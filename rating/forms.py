@@ -12,15 +12,15 @@ class PptForm(ModelForm):
 		model = Ppt
 		exclude = ('user','filename', 'folder', 'rnd','unit_id')
 
-class PptUploadedFileForm(ModelForm):
+class PptUploadFileForm(ModelForm):
 	file = forms.FileField(
 			label='Upload a file',
 			help_text='max. 42 megabytes'
 	)
 	
 	class Meta:
-		model = PptUploadedFile
-		exclude = ('user', 'ppt')
+		model = Ppt
+		exclude = ('user')
 
 # Create a form for creating ratings
 class PptRatingForm(ModelForm):

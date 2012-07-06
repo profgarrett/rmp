@@ -18,6 +18,35 @@ class Ppt(models.Model):
 	
 	unit_id = models.IntegerField() # OLD, use m2m reference now. 
 	user = models.ForeignKey(User)
+
+	STATUS = (
+				(u'0', u'Not processed'),
+				(u'1', u'Started'),
+				(u'2', u'Converted'),
+				(u'E', u'Error'),
+		)
+
+	
+	# Only allow alpha, numeric, _, and . in filename w max len of 100
+	def getuploadedpath(instance):
+		filename, ext = os.path.splitext(filename)
+		if not (ext.upper() == '.PPT' or ext.upper() == '.PPTX'): ext = '.ppt' 
+
+		filename = filename.replace(' ', '_')
+		valid = '_.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+		filename = ''.join(c for c in filename if c in valid)
+
+		return filename[:96] + ext
+
+	file = models.FileField(upload_to=getuploadedpath)
+	
+	# TEMP
+	fid = models.IntegerField(blank=True)
+
+	jpg_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
+	jpg_parse_version = models.SmallIntegerField(blank=True)
+	html_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
+	html_parse_version = models.SmallIntegerField(blank=True)
 	
 	def jpgs(self):
 		jpg = '%suserfiles/pptfile/%s/%s/jpg/' % (settings.PPT_FILEPATH, self.user_id, self.id )
@@ -35,39 +64,12 @@ class Ppt(models.Model):
 	def get_absolute_url(self):
 		return '/user/%s/ppt/%s/' % (self.user.username, self.id)
 	
+	def get_absolute_filepath(self):
+		return '%suserfiles/%s' % (settings.PPT_FILEPATH, self.file.name)
+	
 	def __unicode__(self):
 		return "<Ppt %s, %s,%s>" % (self.id, self.folder, self.filename)
 
-
-# File for an uploaded ppt 
-class PptUploadedFile(models.Model):
-	STATUS = (
-				(u'0', u'Not processed'),
-				(u'1', u'Started'),
-				(u'2', u'Converted'),
-				(u'E', u'Error'),
-		)
-	
-	# Only allow alpha, numeric, and . in filename w max len of 70
-	def getuploadedpath(instance, filename=None):
-		valid = '.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-		filename = ''.join(c for c in filename if c in valid)
-		filename = filename[:70] 
-		return 'pptfile/%s/%s/%s' % (instance.ppt.user_id, instance.id, filename )
-	
-	ppt = models.ForeignKey(Ppt)
-	file = models.FileField(upload_to=getuploadedpath)
-	
-	jpg_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
-	jpg_parse_version = models.SmallIntegerField(blank=True)
-	html_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
-	html_parse_version = models.SmallIntegerField(blank=True)
-	
-	def get_absolute_path(self):
-		return '%suserfiles/%s' % (settings.PPT_FILEPATH, self.file.name)
-		
-	def __unicode__(self):
-		return '<PptUploadedFile %s, %s, %s>' % (self.id, self.ppt.id, self.ppt.user.username)
 
 
 # Model for storing results of parsing html
@@ -105,6 +107,7 @@ class PptHtmlImage(models.Model):
 	height = models.IntegerField(blank=True)
 	width = models.IntegerField(blank=True)
 	template = models.BooleanField()
+	vector = models.BooleanField()
 	
 	ppt = models.ForeignKey(Ppt)
 	
@@ -112,6 +115,11 @@ class PptHtmlImage(models.Model):
 		user = self.ppt.user
 		return "/user/%s/ppt/%s/img/%s" % (user.username, self.ppt_id, self.filename)
 	
+	# Is the passed image a vector type?
+	def filename_is_vector(self, filename=None):
+		filename, ext = os.path.splitext(filename or self.filename)
+		return ext in ['.wmz', '.emz']
+
 	def __unicode__(self):
 		return '<PptHtmlImage %s, %s, %s>' % (self.id, self.filename, self.ppt)
 
