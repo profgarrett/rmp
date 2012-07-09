@@ -58,6 +58,11 @@
 		border: solid 2px red;
 		position:absolute;
 	}
+
+	.slideimage {
+		border: solid 2px green;
+		position:absolute;	
+	}
 </style>
 
 
@@ -115,10 +120,10 @@
 			<li class='template{{ src.template}}'>
 				{{ src.src }}, {{ src.template }}
 				<div class='slidepage' style="height:{{ page.jpg.height }}px; width:{{ page.jpg.width }}px">
-				<img src="{{ src.src }}" 
+				<img src="{{ src.src }}" class='slideimage'
 					width="{{ src.width }}px" 
 					height="{{ src.height }}px" 
-					style="position:absolute;left:{{ src.left }}px;top:{{ src.top }}px;"
+					style="left:{{ src.left }}px;top:{{ src.top }}px;"
 				/>
 			</div>
 			</li>

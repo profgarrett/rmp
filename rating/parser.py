@@ -1,3 +1,6 @@
+# coding=UTF-8
+
+
 # Manage PPT Files
 
 from bs4 import BeautifulSoup, NavigableString
@@ -17,7 +20,7 @@ from rating.models import *
 from rating.utility import parseInt, prettyString
 
 class HtmlParser:
-	PARSE_VERSION = 1 # Way for force updating db on algorithm changes
+	PARSE_VERSION = 2 # Way for force updating db on algorithm changes
 	
 	def __init__(self, ppt, debug=False):
 
@@ -37,24 +40,36 @@ class HtmlParser:
 		self.path = path # Where is the folder?
 		self.debug = debug # print debug statements?
 		
-		# Find uploaded files.
-		if ppt.jpg_export_status == '2' and (debug or ppt.jpg_parse_version is None or ppt.jpg_parse_version < self.PARSE_VERSION):
-			if os.path.exists(self.path+'/jpg'):
-				self.parseJPG(ppt, self.path+'/jpg/')
-				ppt.jpg_parse_version = self.PARSE_VERSION
-			else:
-				ppt.jpg_parse_version = -1
-			
-			ppt.save()
+		# JPG
+		try:
+			if ppt.jpg_export_status == '2' and (debug or ppt.jpg_parse_version is None or ppt.jpg_parse_version < self.PARSE_VERSION):
+				if os.path.exists(self.path+'/jpg'):
+					self.parseJPG(ppt, self.path+'/jpg/')
+					ppt.jpg_parse_version = self.PARSE_VERSION
+				else:
+					ppt.jpg_parse_version = -1
+				
+				ppt.save()
 
-		if ppt.html_export_status == '2' and (debug or ppt.html_parse_version is None or ppt.html_parse_version < self.PARSE_VERSION):
-			if os.path.exists(self.path+'/html_files'):
-				self.parseHTML(ppt, self.path+'/html_files/')
-				ppt.html_parse_version = self.PARSE_VERSION
-			else:
-				ppt.html_parse_version = -1
-			
-			ppt.save()
+		except Exception as err:
+			ppt.jpg_parse_version = -1
+			raise
+
+
+		# HTML
+		try:
+			if ppt.html_export_status == '2' and (debug or ppt.html_parse_version is None or ppt.html_parse_version < self.PARSE_VERSION):
+				if os.path.exists(self.path+'/html_files'):
+					self.parseHTML(ppt, self.path+'/html_files/')
+					ppt.html_parse_version = self.PARSE_VERSION
+				else:
+					ppt.html_parse_version = -1
+				
+				ppt.save()
+
+		except Exception as err:
+			ppt.html_parse_version = -1
+			raise
 
 
 
@@ -66,8 +81,10 @@ class HtmlParser:
 	
 	# Open a file and return a proper BeautifulSoup object.
 	def _open(self, filename):
+		if self.debug: self._log('Opening file %s', (filename,))
 		# Try to fix encoding issue.  PPT appears to use meta tag saying that it uses CP1252
-		fh = codecs.open(filename,'r', 'windows-1252')
+		fh = codecs.open(filename,'r', 'windows-1252', errors='ignore')
+
 		html = fh.read()
 		#html = html.encode('utf-8') # database default encoding.
 		# use html5lib instead of default to avoid problems with img tags not being self-closing.
@@ -127,101 +144,102 @@ class HtmlParser:
 		return md5.hexdigest()
 	
 	
-	# source http://stackoverflow.com/questions/379906/python-parse-string-to-float-or-int
-	#_parseStr = lambda x: x.isalpha() and x or x.isdigit() and \
-	#	int(x) or x.isalnum() and x or \
-	#	len(set(string.punctuation).intersection(x)) == 1 and \
-	#	x.count('.') == 1 and float(x) or x
-	
-	# safe way of parsing integer values that may have string elements mixed in (such as % )
-	
-	
-	# Recursively parse out the position from the beautifulsoup element passed.
-	# Uses algorithm of return min left, min top, max width, max height
-	# Note that once we get a position, the results will be returned.
-	# This is a result of some divs not having a position, but relying upon contained spans
-	# 	whose left/top/right/bottom must be combined. 
-	#	However, other divs have position, and their contained spans are positioned relatively
-	#	and % refers to the div, not the entire page.
+	# Recurively searches for instances of text inside of the html page.
+	# 
+	# Creates the string entries.
 	#
-	# Currently, this is flawed.  Need to write in the opposite direction following:
-	# Find child node
-	# Goto parent until root doing
-	# 	If position, then save
-	#	If already had position, and both are absolutely positioned, then
-	#		change child position to be the % of the parent position.
-	def _parsePosition(self, bs, pos=None):
-		
-		# See if the top-left corner or bottom-right corner are outside existing pos
-		def set(o1, o2, width, left):
-			
-			# Make sure we have 2 valid sets of positions.
-			if o1[width] is None or o1[left] is None:
-				return o2[width], o2[left]
-			elif o2[width] is None or o2[left] is None:
-				return o1[width], o1[left]
-			
-			# Set left
-			if o1[left] < o2[left]:
-				new_left = o1[left]
+	# @bs_stack The current item being examinaged.
+	# @parent_pos The left, hight, width, and top attributes for the parent.  None if not set.
+	def _parseText(self, pptHtmlPage, bs, w=None,l=None,t=None,h=None):
+
+		if w == None or h == None or l == None or t == None: 
+			# Set to 100% of screen for initial container.
+			w = h = 100
+			t = l = 0
+
+		elif not bs.name[0] == 'v':
+			# Find if there's a size for this object as long as it's not a v object (custom IE stuff)
+			new_pos = self._parsePosition(bs)
+
+			# Reduce size of this object based upon the size of the containing object.
+			if not new_pos == None:
+				
+				# Left & top are:
+				#	1. Scaled to the percentage of the container's width/height
+				#	2. Added to the existing left/top from the container.
+				l = l + int(round(new_pos['left'] * w / 100, 0))
+				t = t + int(round(new_pos['top'] * h / 100, 0))
+
+				# Width & Height are set to the % of the container width & height
+				w = int(round(w * new_pos['width'] / 100, 0))
+				h = int(round(h * new_pos['height'] / 100, 0))
+
+				# Don't allow objects to extend beyond sides of screen
+				if w+l > 100:
+					w = w - (l+w-100)
+				if t+h > 100:
+					h = h - (t+h-100)
+
+		# Is this a string or does it contain strings?
+		for node in bs.children:
+			if isinstance(node, NavigableString):
+				# Create a new text node.
+
+				# strip out unwanted line break characters, html bullet points, and leading/trailing spaces.
+				text = node.replace('\r','').replace('\n','').replace('&#13;', '').replace(u'•', '').replace(u'\xe2', u'').strip()
+				
+				# filter out html comments, xml [blacked] items, and where there's no text.
+				if  not ( text[0:4] == '<!--' and text[-3:] == '-->') and \
+					not ( len(text) < 1) and \
+					not ( text[0] == '[' and text[-1] == ']' ):
+
+
+					# See if an existing text with these same dimensions exists.  If so, add this text
+					# to that text instead of creating a new object.  This happens when several spans
+					# are inside of an object with set dimensions.
+					pptHtmlPageTexts = PptHtmlPageText.objects.filter(ppthtmlpage_id=pptHtmlPage.id,
+							pos_top=t, pos_left=l, pos_height=h, pos_width=w)
+
+					if len(pptHtmlPageTexts) > 0:
+						pptHtmlPageText = pptHtmlPageTexts[0]
+						text = pptHtmlPageText.text + " " + text
+						text = text.replace('  ', ' ')
+					else:
+						pptHtmlPageText = PptHtmlPageText()
+						pptHtmlPageText.ppthtmlpage_id = pptHtmlPage.id
+						pptHtmlPageText.pos_top = t
+						pptHtmlPageText.pos_left = l
+						pptHtmlPageText.pos_height = h
+						pptHtmlPageText.pos_width= w
+
+					pptHtmlPageText.md5 = self._getMD5(text)
+					pptHtmlPageText.text = text
+					
+					pptHtmlPageText.save()
+					self._log('Created PptHtmlPageText %s for %s, %s, [l %s, top %s, wid %s, h %s]', \
+						(pptHtmlPageText.id, pptHtmlPage.id, text, pptHtmlPageText.pos_left, pptHtmlPageText.pos_top, \
+						pptHtmlPageText.pos_width, pptHtmlPageText.pos_height))
 			else:
-				new_left = o2[left]
+				# Recurse on textual nodes only.
+				if not node.name[0:3] == 'src': #  or node.name[0:3] == 'div' or node.name[0:4] == 'span':
+					self._parseText(pptHtmlPage, node, w,l,t,h)
 
-			# Now that we have left, we can set width.
-			if o1[width]+o1[left] > o2[width]+o2[left]:
-				new_width = o1[width]+o1[left]-new_left
-			else:
-				new_width = o2[width]+o2[left]-new_left
-
-			return new_width, new_left
-
-		new_pos = {'width': None, 'left': None, 'top': None, 'height': None } 
+	
+	# Return the position of this element in isolation OR None.
+	def _parsePosition(self, bs):
+		pos = {'width': None, 'left': None, 'top': None, 'height': None } 
 		
 		# Find the position of this element
 		if 'style' in bs.attrs:
 			for a in bs.attrs['style'].split(';'):
 				a = a.split(':')
 				a[0] = a[0].lower().strip()
-				if a[0] in ['left', 'top', 'width', 'height']: new_pos[a[0]] = parseInt(a[1])
+				if a[0] in ['left', 'top', 'width', 'height']: pos[a[0]] = parseInt(a[1])
 
-		if pos == None:
-			# Set initial values to the dom object and continue.
-			pos = new_pos
+		if pos['width'] == None or pos['height'] == None or pos['left'] == None or pos['top'] == None:
+			return None
 		else:
-			pos['width'], pos['left'] = set(pos, new_pos, 'width','left')
-			pos['height'], pos['top'] = set(pos, new_pos, 'height','top')
-
-		
-		# If we don't have a position, recursively search.
-		# This is slightly complicated because we may have the following:
-		## Div -> div.style -> span.style
-		#  We want the divs, but not the span style, because it's relative to the div, and not the page.
-		# But, we still need to have this work
-		# Div -> [span.style, span.style]
-		# And this,
-		# Div -> [ div-> [span.style, span.style], div.style, div.style ]
-		# So, the compromise is to stop recursing once we get a position, but to always iterate through
-		# the current level completely.
-		if pos['width'] == None or pos['left'] == None or pos['top'] == None or pos['height'] == None:
-			# Search direct child nodes.
-			for node in bs.children:
-				if not isinstance(node, NavigableString):
-					self._parsePosition(node, pos)
-		
-		for p in pos:
-			# ensure that position is never less than 0, or greater than 100
-			if pos[p] is None: continue
-			if pos[p] < 0: pos[p] = 0
-			if pos[p] > 100: pos[p] = 100
-		
-		# make sure we don't run off of the side of the screen.
-		if pos['width']+pos['left'] > 100:
-			pos['width'] = 100 - pos['left']
-
-		if pos['height']+pos['top'] > 100:
-			pos['height'] = 100 - pos['top']
-
-		return pos
+			return pos
 	
 	
 	####################
@@ -339,55 +357,29 @@ class HtmlParser:
 			for img in images:
 				
 				src = self._parseSrc(img)
-				if src is None:
+				if src is None or src.strip() == "":
 					continue
 				
 				pos = self._parsePosition(img)
 
 				# Find matching actual image entry and then add to page.
-				pptHtmlImage = PptHtmlImage.objects.get(ppt_id=ppt.id, filename=src)
-				pptHtmlPageSrc = PptHtmlPageSrc()
-				pptHtmlPageSrc.pos_left = pos['left']
-				pptHtmlPageSrc.pos_top = pos['top']
-				pptHtmlPageSrc.pos_height = pos['height']
-				pptHtmlPageSrc.pos_width= pos['width']
-				pptHtmlPageSrc.ppthtmlpage_id = pptHtmlPage.id 
-				pptHtmlPageSrc.ppthtmlimage_id = pptHtmlImage.id
-				pptHtmlPageSrc.save()
-				self._log('Parsed pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src ))
-			
-			
-			def text_filter(tag):
-				if not tag.name == 'div': return False
+				pptHtmlImages = PptHtmlImage.objects.filter(ppt_id=ppt.id, filename=src)
+				if len(pptHtmlImages) == 1:
+					pptHtmlPageSrc = PptHtmlPageSrc()
+					pptHtmlPageSrc.pos_left = pos['left']
+					pptHtmlPageSrc.pos_top = pos['top']
+					pptHtmlPageSrc.pos_height = pos['height']
+					pptHtmlPageSrc.pos_width= pos['width']
+					pptHtmlPageSrc.ppthtmlpage_id = pptHtmlPage.id 
+					pptHtmlPageSrc.ppthtmlimage_id = pptHtmlImages[0].id
+					pptHtmlPageSrc.save()
+					self._log('Parsed pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src ))
+				else:
+					self._log('Error finding pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src ), True)
 
-				if tag.has_key('class'):  # Listing every possibility getting too hard to do.
-					if 'O' in tag['class']: return True # Bullet point
-					if 'CT' in tag['class']: return True # Title 
-					if 'CB' in tag['class']: return True # Sub-title 
-					if 'T' in tag['class']: return True # Sub-title side bold? 
-					if 'B' in tag['class']: return True # Sub-title side bold? 
-					if 'B1' in tag['class']: return True # Sub-point bold.
-				return False
-			
 			# Add each text snip
-			divs = bs.find_all(text_filter)
-			for d in divs:
-				text = d.get_text()
-				text = text.replace('\r','').replace('\n','').strip().encode('utf-8')
-				
-				if len(text) > 0:
-					pptHtmlPageText = PptHtmlPageText()
-					pptHtmlPageText.ppthtmlpage_id = pptHtmlPage.id
-					pptHtmlPageText.md5 = self._getMD5(text)
-					pptHtmlPageText.text = text
-					pos = self._parsePosition(d)
-					pptHtmlPageText.pos_top = pos['top']
-					pptHtmlPageText.pos_left = pos['left']
-					pptHtmlPageText.pos_height = pos['height']
-					pptHtmlPageText.pos_width= pos['width']
-					
-					pptHtmlPageText.save()
-					self._log('Created PptHtmlPageText for %s, %s', (pptHtmlPage.id, text))
+			for slideObj in bs.find_all(id='SlideObj'):
+				self._parseText(pptHtmlPage, slideObj)
 			
 			self._log('Finished parsing file %s', ('',))
 		

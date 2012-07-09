@@ -39,10 +39,6 @@ class Ppt(models.Model):
 		return filename[:96] + ext
 
 	file = models.FileField(upload_to=getuploadedpath)
-	
-	# TEMP
-	fid = models.IntegerField(blank=True)
-
 	jpg_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
 	jpg_parse_version = models.SmallIntegerField(blank=True)
 	html_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
@@ -118,7 +114,7 @@ class PptHtmlImage(models.Model):
 	# Is the passed image a vector type?
 	def filename_is_vector(self, filename=None):
 		filename, ext = os.path.splitext(filename or self.filename)
-		return ext in ['.wmz', '.emz']
+		return ext in ['.wmz', '.emz', '.pcz']
 
 	def __unicode__(self):
 		return '<PptHtmlImage %s, %s, %s>' % (self.id, self.filename, self.ppt)

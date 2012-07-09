@@ -150,7 +150,6 @@ def user_ppt_jpg(request, username, ppt_id, slide):
 	user = get_object_or_404(User, username=username)
 	
 	filepath  = '%suserfiles/pptfile/%s/%s/jpg/Slide%s.JPG' % (settings.PPT_FILEPATH, user.id, ppt_id, slide )
-	print filepath
 	try:
 		f = open(filepath, 'rb')
 		return HttpResponse(f.read())
