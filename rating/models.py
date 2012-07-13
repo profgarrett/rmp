@@ -47,8 +47,9 @@ class Ppt(models.Model):
 	def jpgs(self):
 		jpg = '%suserfiles/pptfile/%s/%s/jpg/' % (settings.PPT_FILEPATH, self.user_id, self.id )
 		username = self.user.username
-		
+		print jpg
 		if not os.path.exists(jpg):
+			print 'not'
 			return []
 		
 		jpgs = []

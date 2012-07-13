@@ -42,7 +42,7 @@ def goto_random(request):
 	else:
 		ppt_list = ppt_list[0]
 		user = ppt_list.user
-	
+
 	return HttpResponseRedirect('/user/%s/ppt/%s/rate' % (user.username, ppt_list.pk))
 
 
@@ -232,8 +232,9 @@ def user_ppt_rate(request, username, ppt_id):
 	else:
 		
 		# refactor out jpg access
-		jpg = settings.PPT_FILEPATH + ppt.folder + '/jpg/'
-		if not os.path.exists(jpg):
+		jpgs = ppt.jpgs()
+		print jpgs
+		if False and not os.path.exists(jpg):
 			p = PptRating()
 			p.user_id = request.user.id
 			p.ppt_id = ppt_id
@@ -247,10 +248,6 @@ def user_ppt_rate(request, username, ppt_id):
 			
 			p.save()
 			return HttpResponseRedirect('/ppt/random')
-		
-		jpgs = []
-		for j in os.listdir(jpg):
-			if j[-3:] == 'JPG': jpgs.append('/ppt/'+ppt.folder+'/jpg/'+j)
 		
 		form = PptRatingForm()
 	
