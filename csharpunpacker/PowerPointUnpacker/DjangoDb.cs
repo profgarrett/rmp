@@ -33,23 +33,22 @@ namespace PowerPointUnpacker
         /**
          * Return a stack containing all unprocessed files
          */
-        public Stack<PptUploadedFile> GetUnprocessedFiles()
+        public Stack<Ppt> GetUnprocessedFiles()
         {
-            Stack<PptUploadedFile> st = new Stack<PptUploadedFile>();
-            string sql = "SELECT id, ppt_id, file, exported_to_jpg, exported_to_html " +
-                "FROM rmp.rating_pptuploadedfile " + 
-                "WHERE exported_to_jpg = '0'";
+            Stack<Ppt> st = new Stack<Ppt>();
+            string sql = "SELECT id, file, jpg_export_status, html_export_status " +
+                "FROM rmp.rating_ppt " +
+                "WHERE jpg_export_status = '0'";
 
             MySqlCommand cmd = new MySqlCommand(sql, myCon);
             MySqlDataReader rdr = cmd.ExecuteReader();
 
             while (rdr.Read()) {
-                PptUploadedFile pptFile = new PptUploadedFile();
+                Ppt pptFile = new Ppt();
                 pptFile.id = Int32.Parse(rdr[0].ToString());
-                pptFile.ppt_id = Int32.Parse(rdr[1].ToString());
-                pptFile.file = rdr[2].ToString();
-                pptFile.exported_to_jpg = rdr[3].ToString();
-                pptFile.exported_to_html = rdr[4].ToString();
+                pptFile.file = rdr[1].ToString();
+                pptFile.exported_to_jpg = rdr[2].ToString();
+                pptFile.exported_to_html = rdr[3].ToString();
                 st.Push(pptFile);
             }
             rdr.Close();
@@ -59,11 +58,11 @@ namespace PowerPointUnpacker
         /**
          * Update the contents of the file in the database
          */
-        public void Update(PptUploadedFile pptFile)
+        public void Update(Ppt pptFile)
         {
-            string sql = "UPDATE rmp.rating_pptuploadedfile " +
-                    " SET exported_to_jpg = '" + pptFile.exported_to_jpg + "', " +
-                    " exported_to_html = '" + pptFile.exported_to_html + "'" +
+            string sql = "UPDATE rmp.rating_ppt " +
+                    " SET jpg_export_status = '" + pptFile.exported_to_jpg + "', " +
+                    " html_export_status = '" + pptFile.exported_to_html + "'" +
                     " WHERE id = " + pptFile.id;
 
             MySqlCommand cmd = new MySqlCommand(sql, myCon);
@@ -84,10 +83,9 @@ namespace PowerPointUnpacker
     }
 
 
-    class PptUploadedFile
+    class Ppt
     {
         public int id = 0;
-        public int ppt_id = 0;
         public string file = "";
         public string exported_to_jpg = "";
         public string exported_to_html = "";
