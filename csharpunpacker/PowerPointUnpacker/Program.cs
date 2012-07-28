@@ -39,8 +39,8 @@ namespace PowerPointUnpacker
             Config config = new Config("../../../../rmp/local_settings.py"); // pathway to config file.
             db.Connect(config);
 
-            Stack<PptUploadedFile> pptFiles = db.GetUnprocessedFiles();
-            foreach(PptUploadedFile pptFile in pptFiles) {
+            Stack<Ppt> pptFiles = db.GetUnprocessedFiles();
+            foreach(Ppt pptFile in pptFiles) {
 
                 PowerPoint p = new PowerPoint(config.pptfiles + "userfiles/" + pptFile.file);
                 Console.WriteLine("Processing " + pptFile.file);
