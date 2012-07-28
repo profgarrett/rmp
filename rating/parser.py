@@ -6,6 +6,11 @@
 from bs4 import BeautifulSoup, NavigableString
 import hashlib
 import codecs
+import Image
+import fnmatch
+import re
+import math
+
 
 from rating.models import PptJpg
 from rating.models import *
@@ -128,20 +133,47 @@ class HtmlParser:
         return md5.hexdigest()
     
     def _getMD5(self, text):
-        block_size = 2 ** 14
         md5 = hashlib.md5()
         text = re.sub(r'\W+', '', text)  # no non-alphanum (eg unicode)
         md5.update(text)
         return md5.hexdigest()
-    
-    
+
+    # Calculate image entropy.  Algo thanks to
+    #  http://brainacle.com/calculating-image-entropy-with-python-how-and-why.html
+    def _image_entropy(self, img):
+        histogram = img.histogram()
+        histogram_length = sum(histogram)
+
+        samples_probability = [float(h) / histogram_length for h in histogram]
+
+        return -sum([p * math.log(p, 2) for p in samples_probability if p != 0])
+        
+    # Update the passed model with the image properties.
+    def _parseImage(self, path, filename, model):
+        try:
+            model.filename = filename
+            imagepath = path + filename
+            
+            model.size = os.path.getsize(imagepath)
+            model.md5 = self._getHash(imagepath)
+            
+            image = Image.open(imagepath)
+            model.entropy = self._image_entropy(image)
+            model.width = image.size[0]
+            model.height = image.size[1]
+            
+        except IOError as detail:
+            # Invalid image format, e.g., wmz or some other strange thing
+            if detail.args[0] != 'cannot identify image file':
+                self._log('_parseImage Error %s', (detail), True)
+
     # Recurively searches for instances of text inside of the html page.
-    # 
+    #
     # Creates the string entries.
     #
     # @bs_stack The current item being examinaged.
     # @parent_pos The left, hight, width, and top attributes for the parent.  None if not set.
-    def _parseText(self, pptHtmlPage, bs, w=None,l=None,t=None,h=None):
+    def _parseText(self, pptHtmlPage, bs, w=None, l=None, t=None, h=None):
 
         if w == None or h == None or l == None or t == None:
             # Set to 100% of screen for initial container.
@@ -166,10 +198,10 @@ class HtmlParser:
                 h = int(round(h * new_pos['height'] / 100, 0))
 
                 # Don't allow objects to extend beyond sides of screen
-                if w+l > 100:
-                    w = w - (l+w-100)
-                if t+h > 100:
-                    h = h - (t+h-100)
+                if w + l > 100:
+                    w = w - (l + w - 100)
+                if t + h > 100:
+                    h = h - (t + h - 100)
 
         # Is this a string or does it contain strings?
         for node in bs.children:
@@ -177,13 +209,12 @@ class HtmlParser:
                 # Create a new text node.
 
                 # strip out unwanted line break characters, html bullet points, and leading/trailing spaces.
-                text = node.replace('\r','').replace('\n','').replace('&#13;', '').replace(u'•', '').replace(u'\xe2', u'').strip()
+                text = node.replace('\r', '').replace('\n', '').replace('&#13;', '').replace(u'•', '').replace(u'\xe2', u'').strip()
                 
                 # filter out html comments, xml [blacked] items, and where there's no text.
                 if  not ( text[0:4] == '<!--' and text[-3:] == '-->') and \
                     not ( len(text) < 1) and \
                     not ( text[0] == '[' and text[-1] == ']' ):
-
 
                     # See if an existing text with these same dimensions exists.  If so, add this text
                     # to that text instead of creating a new object.  This happens when several spans
@@ -201,7 +232,7 @@ class HtmlParser:
                         pptHtmlPageText.pos_top = t
                         pptHtmlPageText.pos_left = l
                         pptHtmlPageText.pos_height = h
-                        pptHtmlPageText.pos_width= w
+                        pptHtmlPageText.pos_width = w
 
                     pptHtmlPageText.md5 = self._getMD5(text)
                     pptHtmlPageText.text = text
@@ -212,26 +243,25 @@ class HtmlParser:
                         pptHtmlPageText.pos_width, pptHtmlPageText.pos_height))
             else:
                 # Recurse on textual nodes only.
-                if not node.name[0:3] == 'src': #  or node.name[0:3] == 'div' or node.name[0:4] == 'span':
-                    self._parseText(pptHtmlPage, node, w,l,t,h)
-
+                if not node.name[0:3] == 'src':  # or node.name[0:3] == 'div' or node.name[0:4] == 'span':
+                    self._parseText(pptHtmlPage, node, w, l, t, h)
     
     # Return the position of this element in isolation OR None.
     def _parsePosition(self, bs):
-        pos = {'width': None, 'left': None, 'top': None, 'height': None } 
+        pos = {'width': None, 'left': None, 'top': None, 'height': None}
         
         # Find the position of this element
         if 'style' in bs.attrs:
             for a in bs.attrs['style'].split(';'):
                 a = a.split(':')
                 a[0] = a[0].lower().strip()
-                if a[0] in ['left', 'top', 'width', 'height']: pos[a[0]] = parseInt(a[1])
+                if a[0] in ['left', 'top', 'width', 'height']:
+                    pos[a[0]] = parseInt(a[1])
 
         if pos['width'] == None or pos['height'] == None or pos['left'] == None or pos['top'] == None:
             return None
         else:
             return pos
-    
     
     ####################
     ## Parsing functions
@@ -253,29 +283,10 @@ class HtmlParser:
             self._parseImage(path, i, jpg)
             jpg.save()
             self._log('Parsed PptJpg for %s, %s', (ppt.id, jpg.filename))
-    
-    
-    # Update the passed model with the image properties.
-    def _parseImage(self, path, filename, model):
-        try:
-            model.filename = filename
-            imagepath = path+filename
-            
-            model.size = os.path.getsize(imagepath)
-            model.md5 = self._getHash(imagepath)
-            
-            image = Image.open(imagepath)
-            model.width = image.size[0]
-            model.height = image.size[1]
-            
-        except IOError as detail:
-            # Invalid image format, e.g., wmz or some other strange thing
-            if detail.args[0] != 'cannot identify image file':
-                self._log('_parseImage Error %s', (detail), True)
-    
+
     
     def parseHTML(self, ppt, path):
-        # Find Html Files 
+        # Find Html Files
         files = os.listdir(path)
         
         outline = None
@@ -297,7 +308,6 @@ class HtmlParser:
             elif fnmatch.fnmatch(fl, 'master*_image*'):
                 images.append(filename)
         
-
         # Delete all old html records in the db.
         #   Do not use references from the htmlimage to related objects, as sometimes id=None
         #   if an error is thrown during parsing (leaving it incomplete)
@@ -311,14 +321,12 @@ class HtmlParser:
         PptHtmlImage.objects.filter(ppt_id=ppt.id).delete()
         htmlpages.delete()
 
-
-
         ### Find Html Image File Properties
         for filename in images:
             
             img = PptHtmlImage()
             img.filename = filename
-            img.template = (filename[0:6] == 'master' or 'background.' in filename) # is this a background image?
+            img.template = (filename[0:6] == 'master' or 'background.' in filename)  # is this a background image?
             img.vector = img.filename_is_vector()
             img.ppt_id = ppt.id
             self._parseImage(path, filename, img)
@@ -328,20 +336,19 @@ class HtmlParser:
         
         ### begin parsing textual properties
         for filename in pages:
-            bs = self._open(path+filename)
+            bs = self._open(path + filename)
             html = bs.prettify()
 
             pptHtmlPage = PptHtmlPage()
             pptHtmlPage.ppt_id = ppt.id
-            pptHtmlPage.filename = filename 
+            pptHtmlPage.filename = filename
             pptHtmlPage.pagetype = 'S'  # slide type
             pptHtmlPage.md5 = self._getMD5(html)
             pptHtmlPage.html = html
-            pptHtmlPage.title = '' # Set by outline parser code
-            pptHtmlPage.order = None # Set by outline parser code. 
+            pptHtmlPage.title = ''  # Set by outline parser code
+            pptHtmlPage.order = None  # Set by outline parser code.
             pptHtmlPage.save()
             self._log('Parsed PptHtmlPage for %s, %s', (ppt.id, pptHtmlPage.filename))
-        
             
             # Add a link for every image found on the page.
             images = bs.find_all('img')
@@ -360,13 +367,13 @@ class HtmlParser:
                     pptHtmlPageSrc.pos_left = pos['left']
                     pptHtmlPageSrc.pos_top = pos['top']
                     pptHtmlPageSrc.pos_height = pos['height']
-                    pptHtmlPageSrc.pos_width= pos['width']
-                    pptHtmlPageSrc.ppthtmlpage_id = pptHtmlPage.id 
+                    pptHtmlPageSrc.pos_width = pos['width']
+                    pptHtmlPageSrc.ppthtmlpage_id = pptHtmlPage.id
                     pptHtmlPageSrc.ppthtmlimage_id = pptHtmlImages[0].id
                     pptHtmlPageSrc.save()
-                    self._log('Parsed pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src ))
+                    self._log('Parsed pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src))
                 else:
-                    self._log('Error finding pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src ), True)
+                    self._log('Error finding pptHtmlPageSrc for %s, %s', (pptHtmlPage.id, src), True)
 
             # Add each text snip
             for slideObj in bs.find_all(id='SlideObj'):
@@ -374,11 +381,9 @@ class HtmlParser:
             
             self._log('Finished parsing file %s', ('',))
         
-
-
         ### parse outline ###
         if not outline is None:
-            bs = self._open(path+outline)
+            bs = self._open(path + outline)
 
             # Cache of slide ids to relate the titles to the bullets (which are in different parts of the html)
             slides = {}
@@ -397,7 +402,7 @@ class HtmlParser:
                     for a in link.find_all('a')[0:1]:
                         
                         # Parse out slide0001.htm from the javascript code in href.
-                        filename = a.get('href') 
+                        filename = a.get('href')
                         regfilename = re.search("(slide\d{4}.htm)", filename)
                         if regfilename is None:
                             continue
@@ -409,7 +414,7 @@ class HtmlParser:
                         if len(pptHtmlPages) > 0:
                             pptHtmlPages[0].order = order
                             pptHtmlPages[0].title = title
-                            pptHtmlPages[0].setjpg() # now that we have an order, we can find the right jpg file.
+                            pptHtmlPages[0].setjpg()  # now that we have an order, we can find the right jpg file.
                             pptHtmlPages[0].save()
                             slides[order] = pptHtmlPages[0]
                             self._log("Updated pptHtmlPage data from outline = %s, %s", (title, order))
@@ -418,8 +423,8 @@ class HtmlParser:
 
                 for bullet in table.find_all('div', 'CTxt'):
 
-                    order = parseInt(bullet.get('id')) # use to find slide by its order no.
-                    i = -1 # track order of bullets
+                    order = parseInt(bullet.get('id'))  # use to find slide by its order no.
+                    i = -1  # track order of bullets
 
                     for li in bullet.find_all('li'):
 

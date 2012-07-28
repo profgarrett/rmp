@@ -11,15 +11,8 @@ import os
 # Remove column old_id from rating_pptunit (refers to id in ppt db)
 
 class Ppt(models.Model):
-    title = models.CharField(max_length=240)
-    filename = models.CharField(max_length=240)
-    folder = models.CharField(max_length=240)
-    rnd = models.IntegerField()
-    source_url = models.CharField(max_length=240)
-    
-    unit_id = models.IntegerField()  # OLD, use m2m reference now.
-    user = models.ForeignKey(User)
 
+    # Processing status
     STATUS = (
                 (u'0', u'Not processed'),
                 (u'1', u'Started'),
@@ -37,7 +30,16 @@ class Ppt(models.Model):
         valid = '_.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
         filename = ''.join(c for c in filename if c in valid)
 
-        return filename[:96] + ext
+        return 'pptfile/%s/%s/%s' % (self.user_id, self.id, filename[:96] + ext)
+
+    title = models.CharField(max_length=240)
+    filename = models.CharField(max_length=240)
+    folder = models.CharField(max_length=240)
+    rnd = models.IntegerField()
+    source_url = models.CharField(max_length=240)
+    
+    unit_id = models.IntegerField()  # OLD, use m2m reference now.
+    user = models.ForeignKey(User)
 
     file = models.FileField(upload_to=getuploadedpath)
     jpg_export_status = models.CharField(max_length=1, choices=STATUS, default='0')

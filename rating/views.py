@@ -161,6 +161,7 @@ def user_ppt_img(request, username, ppt_id, filename):
         raise Http404
     
     filepath = '%suserfiles/pptfile/%s/%s/html_files/%s' % (settings.PPT_FILEPATH, user.id, ppt_id, filename)
+    print filepath
     try:
         f = open(filepath, 'rb')
         return HttpResponse(f.read())
