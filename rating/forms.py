@@ -5,6 +5,18 @@ from django.forms.widgets import RadioSelect
 from rating.models import *
 
 
+ppts = Ppt.objects.filter(user_id=1)
+
+for p in ppts:
+    if p.jpg_export_status == 'E':
+        p.jpg_export_status = 0
+        p.html_export_status = 0
+        p.jpg_parse_version = None
+        p.html_parse_version = None
+        p.file = p.getuploadedpath(p.file.name)
+        p.save()
+        print p.file.name
+
 # Process a new file
 class PptForm(ModelForm):
 
