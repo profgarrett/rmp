@@ -77,6 +77,7 @@ class PptJpg(models.Model):
     md5 = models.CharField(max_length=255)
     filename = models.CharField(max_length=255)
     size = models.IntegerField()
+    entropy = models.DecimalField(max_digits=9, decimal_places=5, blank=True, null=True)
     height = models.IntegerField(blank=True)
     width = models.IntegerField(blank=True)
     
@@ -106,6 +107,7 @@ class PptHtmlImage(models.Model):
     size = models.IntegerField()
     height = models.IntegerField(blank=True)
     width = models.IntegerField(blank=True)
+    entropy = models.DecimalField(max_digits=9, decimal_places=5, blank=True, null=True)
     template = models.BooleanField()
     vector = models.BooleanField()
     

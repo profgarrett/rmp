@@ -159,6 +159,7 @@ class HtmlParser:
             
             image = Image.open(imagepath)
             model.entropy = self._image_entropy(image)
+            print model.entropy
             model.width = image.size[0]
             model.height = image.size[1]
             
