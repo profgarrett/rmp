@@ -138,7 +138,7 @@ class HtmlParser:
         md5.update(text)
         return md5.hexdigest()
 
-    # Calculate image entropy.  Algo thanks to
+    # Calculate image entropy.  Many thanks to example code from
     #  http://brainacle.com/calculating-image-entropy-with-python-how-and-why.html
     def _image_entropy(self, img):
         histogram = img.histogram()
@@ -159,7 +159,6 @@ class HtmlParser:
             
             image = Image.open(imagepath)
             model.entropy = self._image_entropy(image)
-            print model.entropy
             model.width = image.size[0]
             model.height = image.size[1]
             

@@ -116,6 +116,13 @@ class PptHtmlImage(models.Model):
     def get_absolute_url(self):
         user = self.ppt.user
         return "/user/%s/ppt/%s/img/%s" % (user.username, self.ppt_id, self.filename)
+
+    def get_absolute_path(self, user=None):
+        if user == None:
+            user = self.ppt.user
+        
+        return "%s/userfiles/pptfile/%s/%s/html_files/%s" % (
+                settings.PPT_FILEPATH, user.id, self.ppt_id, self.filename)
     
     # Is the passed image a vector type?
     def filename_is_vector(self, filename=None):
