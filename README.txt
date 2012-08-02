@@ -60,6 +60,18 @@ Note that after you install PIL, be sure to look to the log to see that jpeg sup
 
 Third, configure localsettings.py file for database setup.  Use the example template provided as a starting point.
 
+
+
+Fourth, install NLTK corpus.
+
+	Follow instructions on http://nltk.org/install.html
+
+	Open a python prompt.
+	import nltk
+	nltk.download()
+
+	Use the GUI to download all resources.
+
 VirtualEnv
 ===========
 
@@ -71,9 +83,9 @@ Other Notes
 
 I use South to manage db updates.
 
-To create a new schema, 
-	./manage.py schemamigration rating --auto
-	./manage.py migrate southtut
+To update to a new schema with some changes to models.py, 
+	python manage.py schemamigration rating --auto
+	python manage.py migrate rating
 
 Run the following to fake a migration (get south files upto date w/o changing db)
-	./manage.py migrate myapp 0001 --fake
+	python manage.py migrate myapp 0001 --fake

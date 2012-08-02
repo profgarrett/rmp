@@ -46,6 +46,10 @@ class Ppt(models.Model):
     jpg_parse_version = models.SmallIntegerField(blank=True)
     html_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
     html_parse_version = models.SmallIntegerField(blank=True)
+
+    slide_title_avg_length = models.DecimalField(max_digits=9, decimal_places=5, blank=True, null=True)
+    slide_points_FleschKincaidGradeLevel = models.DecimalField(max_digits=9, decimal_places=5, blank=True, null=True)
+    slide_words_sum = models.IntegerField(blank=True, null=True)
     
     def jpgs(self):
         jpg = '%suserfiles/pptfile/%s/%s/jpg/' % (settings.PPT_FILEPATH, self.user_id, self.id)
@@ -144,7 +148,7 @@ class PptHtmlPage(models.Model):
     md5 = models.CharField(max_length=255)
     filename = models.CharField(max_length=255)
     pagetype = models.CharField(max_length=1, choices=HTML_TYPES)
-    html = models.TextField()
+    #html = models.TextField()
     title = models.TextField()
     order = models.IntegerField(blank=True)
 

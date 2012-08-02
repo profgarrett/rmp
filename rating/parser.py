@@ -10,7 +10,8 @@ import Image
 import fnmatch
 import re
 import math
-
+from nltk_contrib.readabilitytests import ReadabilityTool
+import numpy
 
 from rating.models import PptJpg
 from rating.models import *
@@ -62,6 +63,15 @@ class HtmlParser:
                     ppt.html_parse_version = -1
                 
                 ppt.save()
+
+        except Exception as err:
+            ppt.html_parse_version = -1
+            raise
+
+        # Statistics
+        try:
+            self.parseReadability(ppt)
+            ppt.save()
 
         except Exception as err:
             ppt.html_parse_version = -1
@@ -421,6 +431,7 @@ class HtmlParser:
                         else:
                             self._log("ERROR: Unable to find pptHtmlPage %s, %s", (ppt.id, filename), True)
 
+                # Find the bulleted points for each slide.
                 for bullet in table.find_all('div', 'CTxt'):
 
                     order = parseInt(bullet.get('id'))  # use to find slide by its order no.
@@ -444,6 +455,34 @@ class HtmlParser:
                         pptHtmlPagePoint.order = i
                         pptHtmlPagePoint.save()
                         self._log("Created PptHtmlPagePoint %s, %s, %s", (pptHtmlPagePoint.id, text, order))
+        
+        self._log("Finished parsing html export %s", ("", ))
 
 
-        self._log("Finished parsing html export %s",("",)) 
+    def parseReadability(ppt):
+        titles = []
+        points = []
+        i = 0
+
+        tool = ReadabilityTool()
+
+        for page in ppt.ppthtmlpage_set.all():
+            # Calculate length of titles for non-zero length items.
+            i = len(page.title.encode('ascii', 'ignore'))
+            if i > 0:
+                titles.append(i)
+
+            # Calculate readability for the slide bullet points.
+            for point in page.ppthtmlpagepoint_set.all():
+                points.append(point.text.encode('ascii', 'ignore'))
+
+        s = ". ".join(points)
+        if len(s) > 300:
+            ppt.points_FleschKincaidGradeLevel = tool.FleschKincaidGradeLevel(s)
+
+        if len(titles) > 0:
+            ppt.title_avg_length = numpy.mean(titles)
+
+        ppt.save()
+
+        self._log("Finished parsing readability for %s", (ppt.id, ))

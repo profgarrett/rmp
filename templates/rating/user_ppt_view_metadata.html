@@ -91,9 +91,9 @@
 		{% endif %}
 	</td>
 	<td class='slidelist_td_right'>
-		<h2>{{ page.title }}</h2>
+		<h2>{{ page.title }} ({{ page.title_FleschKincaidGradeLevel }})</h2>
 
-		<b>Points</b>
+		<b>Points ({{ page.text_FleschKincaidGradeLevel }})</b>
 		<ul>
 			{% for point in page.points %}
 			<li>
