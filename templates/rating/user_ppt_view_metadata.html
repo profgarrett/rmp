@@ -73,6 +73,11 @@
 {% block content %}
 <h1>View Metadata for User {{ user.username }} Presentation {{ ppt.id }}</h1>
 
+<ul>
+	<li>Slide title average length: {{ ppt.slide_title_avg_length }}
+	<li>Slide points FleschKincaid Grade Level: {{ ppt.slide_points_FleschKincaidGradeLevel }}
+	<li>All slide words sum: {{ ppt.slide_words_sum }}
+</ul>
 
 <b id='templateshow'>Show</b> or <b id='templatehide'>hide</b> template images.
 
@@ -91,7 +96,7 @@
 		{% endif %}
 	</td>
 	<td class='slidelist_td_right'>
-		<h2>{{ page.title }} ({{ page.title_FleschKincaidGradeLevel }})</h2>
+		<h2>{{ page.title }} </h2>
 
 		<b>Points ({{ page.text_FleschKincaidGradeLevel }})</b>
 		<ul>

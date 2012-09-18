@@ -50,7 +50,7 @@ class Ppt(models.Model):
     slide_title_avg_length = models.DecimalField(max_digits=9, decimal_places=5, blank=True, null=True)
     slide_points_FleschKincaidGradeLevel = models.DecimalField(max_digits=9, decimal_places=5, blank=True, null=True)
     slide_words_sum = models.IntegerField(blank=True, null=True)
-    
+
     def jpgs(self):
         jpg = '%suserfiles/pptfile/%s/%s/jpg/' % (settings.PPT_FILEPATH, self.user_id, self.id)
         username = self.user.username

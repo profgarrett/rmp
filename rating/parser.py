@@ -458,30 +458,40 @@ class HtmlParser:
         
         self._log("Finished parsing html export %s", ("", ))
 
-
-    def parseReadability(ppt):
+    def parseReadability(self, ppt):
         titles = []
         points = []
-        i = 0
+        texts = []
 
         tool = ReadabilityTool()
 
+        # parse html pages
         for page in ppt.ppthtmlpage_set.all():
-            # Calculate length of titles for non-zero length items.
-            i = len(page.title.encode('ascii', 'ignore'))
-            if i > 0:
-                titles.append(i)
 
-            # Calculate readability for the slide bullet points.
+            # Calculate length of titles for non-zero length items.
+            s = page.title.encode('ascii', 'ignore')
+            if len(s) > 0:
+                titles.append(tool.WordCount(s))
+
+            # Collect all of the slide bullet points.
             for point in page.ppthtmlpagepoint_set.all():
                 points.append(point.text.encode('ascii', 'ignore'))
 
+            # Collect all of the text.
+            for text in page.ppthtmlpagetext_set.all():
+                s = text.text.encode('ascii', 'ignore')
+                if len(s) > 0:
+                    texts.append(tool.WordCount(s))
+
         s = ". ".join(points)
         if len(s) > 300:
-            ppt.points_FleschKincaidGradeLevel = tool.FleschKincaidGradeLevel(s)
+            ppt.slide_points_FleschKincaidGradeLevel = tool.FleschKincaidGradeLevel(s)
 
         if len(titles) > 0:
-            ppt.title_avg_length = numpy.mean(titles)
+            ppt.slide_title_avg_length = numpy.mean(titles)
+
+        if len(texts) > 0:
+            ppt.slide_words_sum = numpy.sum(texts)
 
         ppt.save()
 

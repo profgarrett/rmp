@@ -42,8 +42,6 @@ class ScaledPage():
         self.page = pptHtmlPage
         self.title = pptHtmlPage.title
         self.order = pptHtmlPage.order
-        self.text_FleschKincaidGradeLevel = pptHtmlPage.text_FleschKincaidGradeLevel
-        self.title_FleschKincaidGradeLevel = pptHtmlPage.title_FleschKincaidGradeLevel
         self.set_jpg()
         self.set_src()
         self.set_text()
