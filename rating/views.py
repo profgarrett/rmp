@@ -169,6 +169,55 @@ def user_ppt_img(request, username, ppt_id, filename):
         raise Http404
 
 
+# Manually classify image types
+@login_required
+def classify_images(request):
+   
+    if request.method == 'POST':
+        id = request.POST['pptHtmlImage_id']
+        pptHtmlImage = PptHtmlImage.objects.get(id=id)
+        pptHtmlImage.classification = request.POST['classification']
+        pptHtmlImage.save()
+        print pptHtmlImage
+        print pptHtmlImage.classification
+        print request.POST
+
+        return HttpResponseRedirect('/classifyimages')
+
+    else:
+        pptHtmlImages = []
+
+        # Find image to show to user.
+        units = PptUnit.objects.filter(
+                pptunittag__tag='PearsonDiscipline_Computer Science',
+                unittype='Book')
+
+        unit = units[ random.randint(0, len(units) - 1 ) ]
+        ppts = unit.ppts.all()
+        ppt = ppts[ random.randint(0, len(ppts) - 1 ) ]
+
+        # Add each valid image.:
+        for pptHtmlPage in ppt.ppthtmlpage_set.all():
+            for pptHtmlPageSrc in pptHtmlPage.ppthtmlpagesrc_set.all():
+                if (not pptHtmlPageSrc.ppthtmlimage.vector
+                        and not pptHtmlPageSrc.ppthtmlimage.template
+                        and len(pptHtmlPageSrc.ppthtmlimage.classification) < 1):
+                    pptHtmlImages.append(pptHtmlPageSrc.ppthtmlimage)
+
+        # if no images in show, reload page.
+        if len(pptHtmlImages) == 0:
+            print 'No images in %s ' % (ppt.id)
+            return HttpResponseRedirect('/classifyimages')
+
+        pptForm = PptClassifyImageForm(instance=pptHtmlImages[0])
+        #print pptForm
+    
+    return render_to_response('rating/classifyimages.html',
+            { 'pptForm': pptForm, 'pptHtmlImage_id': pptHtmlImages[0].id },
+            context_instance=RequestContext(request)
+    )
+
+
 @login_required
 def user_ppt_upload(request, username):
     

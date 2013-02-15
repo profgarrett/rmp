@@ -17,6 +17,7 @@ for p in ppts:
         p.save()
         print p.file.name
 
+
 # Process a new file
 class PptForm(ModelForm):
 
@@ -32,6 +33,33 @@ class PptForm(ModelForm):
         exclude = ('user', 'filename', 'folder', 'rnd', 'unit_id', \
             'jpg_export_status', 'html_export_status', \
             'jpg_parse_version', 'html_parse_version')
+
+
+# Create a form for creating ratings
+class PptClassifyImageForm(ModelForm):
+    RATING_CHOICES = (
+        (u'None', u'None'),  # not categorized
+        (u'Chart', u'C(h)art'),
+        (u'Code', u'(C)ode'),  # code sample
+        (u'Fluff Image', u'(F)luff Image'),  # Pretty, but no additional meaning to text
+        (u'Design Element', u'(D)esign Element'),  # Making things pretty/layout
+        (u'Diagram/Illustration', u'(a) Diagram/Illustration'),  # Visual representative of idea beyond restating text
+        (u'Equation', u'(E)quation'),
+        (u'Table', u'(T)able'),
+        (u'Text', u'Te(x)t'),  # Text mis-categorized as an image.
+        (u'Screenshot', u'(S)creenshot'),  # print-screen
+        (u'Picture', u'(P)icture'),  # Useful picture
+        (u'z Recode', u'Recode'),
+    )
+    
+    classification = forms.ChoiceField(widget=RadioSelect,
+            choices=RATING_CHOICES,
+            initial='None',
+            label='Image classification')
+    
+    class Meta:
+        model = PptHtmlImage
+        fields = ('classification', 'id', 'filename')
 
 
 # Create a form for creating ratings

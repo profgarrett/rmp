@@ -108,6 +108,7 @@ class PptJpg(models.Model):
 class PptHtmlImage(models.Model):
     md5 = models.CharField(max_length=255)
     filename = models.CharField(max_length=255)
+    classification = models.CharField(max_length=255)
     size = models.IntegerField()
     height = models.IntegerField(blank=True)
     width = models.IntegerField(blank=True)

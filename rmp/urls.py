@@ -26,6 +26,9 @@ urlpatterns += patterns('rating.views',
     # Rating
     url(r'^ppt/random$', 'goto_random'),
     
+    # Manually classify image types
+    url(r'^classifyimages/', 'classify_images'),
+
     # User Ppts
     url(r'^user/$', 'user_list'),
     url(r'^user/(?P<username>\w+)/$', 'user_view'),
