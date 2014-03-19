@@ -39,11 +39,11 @@ class Ppt(models.Model):
         valid = '_.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
         filename = ''.join(c for c in filename if c in valid)
 
-        return 'pptfile/%s/%s/%s' % (self.user_id, self.id, filename[:96] + ext)
+        return 'pptfile/%s/%s' % (self.user_id, filename[:20] + ext)
 
 
-    title = models.CharField(max_length=240, default='')
-    description = models.TextField(default='')
+    title = models.CharField(max_length=240, default='', blank=True)
+    description = models.TextField(default='', blank=True)
     pptfile = models.FileField(upload_to=getuploadedpath)
     jpg_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
     jpg_export_version = models.SmallIntegerField(default='0')
@@ -58,7 +58,7 @@ class Ppt(models.Model):
         return '%suserfiles/%s' % (settings.PPT_FILEPATH, self.file.name)
     
     def __unicode__(self):
-        return "<Ppt %s, %s,%s>" % (self.id, self.folder, self.filename)
+        return "<Ppt %s, %s >" % (self.id, self.file.name)
 
 
 # Model for storing results jpg generated files

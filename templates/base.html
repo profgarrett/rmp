@@ -29,8 +29,10 @@
                     <img class='floatleft' src="/static/img/altair.png" width=50px height=50px>
                     <span>Rate My Powerpoint</span>
                 </a>
-                {% if user %}
+                {% if user.is_authenticated %}
                 <a id='logout' href="/accounts/logout">Log Out</a>
+                {% else %}
+                <a id='logout' href="/accounts/login">Log In</a>
                 {% endif %}
             </div>
 
@@ -67,16 +69,24 @@
         <script src="/static/js/plugins.js"></script>
         <script src="/static/js/main.js"></script>
 
-        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
-        <script>
-        /*
-            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
-            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
-            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
-            e.src='//www.google-analytics.com/analytics.js';
-            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
-            ga('create','UA-XXXXX-X');ga('send','pageview');
-        */
+        {% if GOOGLE_ANALYTICS %}
+         <script type="text/javascript">
+
+          var _gaq = _gaq || [];
+          _gaq.push(['_setAccount', '{{ GOOGLE_ANALYTICS }}']);
+          _gaq.push(['_trackPageview']);
+
+          (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+          })();
+
         </script>
+        {% endif %}
+
+        {% if DEBUG %}
+        <div id='debugwarning'>Debug Mode Active</div>
+        {% endif %}
     </body>
 </html>

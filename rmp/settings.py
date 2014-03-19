@@ -154,9 +154,13 @@ LOGGING = {
     }
 }
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "rmp.context_processors.google_analytics",
+    "rmp.context_processors.debug",
+)
 
-#try:
+
+# Load local_settings file, and fail if it is not found.
 from rmp.local_settings import *
-#except ImportError:
-#    pass
 

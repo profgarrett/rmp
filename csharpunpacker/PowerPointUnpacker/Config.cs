@@ -5,16 +5,16 @@ using System.Text;
 
 namespace PowerPointUnpacker
 {
-    class Config
+    public static class Config
     {
-        public String server;
-        public String user;
-        public String database;
-        public String port;
-        public String password;
-        public String pptfiles;
+        public static String server;
+        public static String user;
+        public static String database;
+        public static String port;
+        public static String password;
+        public static String pptfiles;
 
-        public Config(String path)
+        public static void load(String path)
         {
             if (!System.IO.File.Exists(path))
             {
@@ -28,21 +28,21 @@ namespace PowerPointUnpacker
             {
                 configFile.ReadLine();
             }
-            this.server = stripDefault(configFile.ReadLine());
-            this.user = stripDefault(configFile.ReadLine());
-            this.database = stripDefault(configFile.ReadLine());
-            this.port = stripDefault(configFile.ReadLine());
-            this.password = stripDefault(configFile.ReadLine());
-            this.pptfiles = stripDefault(configFile.ReadLine());
+            Config.server = stripDefault(configFile.ReadLine());
+            Config.user = stripDefault(configFile.ReadLine());
+            Config.database = stripDefault(configFile.ReadLine());
+            Config.port = stripDefault(configFile.ReadLine());
+            Config.password = stripDefault(configFile.ReadLine());
+            Config.pptfiles = stripDefault(configFile.ReadLine());
 
             configFile.Close();
         }
 
         /**
- * Assumes input from a py file.
- * VARIABLE = 'value';
- */
-        private string stripDefault(string line)
+         * Assumes input from a py file.
+         * VARIABLE = 'value';
+         */
+        private static string stripDefault(string line)
         {
             return line.Split('\'')[1];
         }

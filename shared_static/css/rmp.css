@@ -92,3 +92,12 @@ table {
 #sidebar {
 	margin: 10px;
 }
+
+#debugwarning {
+	background-color: yellow;
+	border: solid 1px black;
+	color: black;
+	padding: 10px;
+	margin: 30px 10px;
+	text-align: center;
+}

@@ -36,19 +36,20 @@ namespace PowerPointUnpacker
 
         static void Go() {
             DjangoDb db = new DjangoDb();
-            Config config = new Config("../../../../rmp/local_settings.py"); // pathway to config file.
-            db.Connect(config);
+            Config.load("../../../../rmp/local_settings.py"); // pathway to config file.
+
+            db.Connect();
 
             Stack<Ppt> pptFiles = db.GetUnprocessedFiles();
             foreach(Ppt pptFile in pptFiles) {
 
-                PowerPoint p = new PowerPoint(config.pptfiles + "userfiles/" + pptFile.file);
+                PowerPoint p = new PowerPoint(pptFile);
                 Console.WriteLine("Processing " + pptFile.file);
 
                 // Open file.
                 if (!p.Open())
                 {
-                    pptFile.exported_to_html = "E";
+                    //pptFile.exported_to_html = "E";
                     pptFile.exported_to_jpg = "E";
                     db.Update(pptFile);
                     continue;
@@ -61,11 +62,13 @@ namespace PowerPointUnpacker
                 db.Update(pptFile);
 
                 // Process Html
+                /* Doesn't work in PPT 2013
                 pptFile.exported_to_html = "1";
-                db.Update(pptFile);
+                db.Update(pptFile, config);
                 pptFile.exported_to_html = p.ExportToHtml() ? "2" : "E";
-                db.Update(pptFile);
-                
+                db.Update(pptFile, config);
+                */
+
                 p.Close();
             }
 

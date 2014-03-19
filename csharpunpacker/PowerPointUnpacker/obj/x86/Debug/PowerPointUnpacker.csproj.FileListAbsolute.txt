@@ -19,3 +19,11 @@ E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.
 E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\ResolveAssemblyReference.cache
 E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.exe
 E:\mysql\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.pdb
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.csproj.ResolveComReference.cache
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.exe
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\PowerPointUnpacker.pdb
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.exe
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\PowerPointUnpacker.pdb
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\obj\x86\Debug\ResolveAssemblyReference.cache
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\Npgsql.dll
+E:\rmp2\rmp\csharpunpacker\PowerPointUnpacker\bin\Debug\Mono.Security.dll

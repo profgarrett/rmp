@@ -90,14 +90,17 @@ def user_ppt_jpg(request, username, ppt_id, slide):
         raise Http404
 
 
+# Note that this both uploads new files and allows edits.
 @login_required
 def user_ppt_edit(request, username, ppt_id=False):
     user = User.objects.get(username=request.user)
+
     print(ppt_id)
+
     if not ppt_id == False:
         ppt = get_object_or_404(Ppt, id=ppt_id)
     else:
-        ppt = Ppt(user=user)
+        ppt = Ppt(user=user, title='', description='')
 
     if request.method == 'POST':
         pptForm = PptForm(request.POST, request.FILES, instance=ppt)
