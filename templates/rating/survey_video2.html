@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+
+<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+
+
+
+<script type="text/javascript">
+// Using JQuery selectors to add onFocus and onBlur event handlers
+
+$(document).ready( function() {
+
+
+</script>
+
+<style type="text/css">
+
+	.errorlist {
+		color: red;
+	}
+
+	#ratingform legend {
+	  margin: 0;
+	  padding: 0;
+	  font-weight: bold;
+	  margin-left: 20px;
+	  font-size: 100%;
+	  color: black;
+	}
+
+	#ratingform ul {
+	  margin: 0;
+	  padding: 0;
+	  margin-left: 20px;
+	  list-style: none;
+	}
+
+	#ratingul > li {
+		background-color: lightgray;
+		border: solid 1px black;
+		margin: 5px;
+		padding: 5px;
+	}
+
+	#ratingsubmit {
+		padding: 10px;
+		text-align: center;
+		clear: both;
+		font-size: 200%;
+	}
+
+
+  </style>
+
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Give feedback on Presentation</h1>
+
+<form id='x' action="" method="post">
+	{% csrf_token %}
+	<ul id='ratingul'>
+		<h3>PowerPoint Questions</h3>
+		{{ form1.as_ul }}
+		<h3>Content Questions</h3>
+		{{ form2.as_ul }}
+	</ul>
+
+	<div id='ratingsubmit'>
+		<input  type="submit" value="Save and continue" />
+	</div>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+
+
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+  <script src="//code.jquery.com/jquery-1.9.1.js"></script>
+  <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+<script type="text/javascript">
+
+$(document).ready( function() {
+
+});
+
+
+</script>
+
+<style type="text/css">
+
+.errorlist {
+	color: red;
+}
+
+#ratingform legend {
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  margin-left: 20px;
+  font-size: 100%;
+  color: black;
+}
+
+#ratingform ul {
+  margin: 0;
+  padding: 0;
+  margin-left: 20px;
+  list-style: none;
+}
+
+#ratingul > li {
+	background-color: lightgray;
+	border: solid 1px black;
+	margin: 5px;
+	padding: 5px;
+}
+
+#ratingsubmit {
+	padding: 10px;
+	text-align: center;
+	clear: both;
+	font-size: 200%;
+}
+
+  </style>
+
+
+{% endblock %}
+
+{% block content %}
+
+<h1>General Consent to Participation in Research</h1>
+<h3>Presentation Research Study</h3>
+
+<p>You are asked to participate in a research study conducted by Nathan Garrett, PhD from the School of Business at Woodbury University. You were selected as a possible participant in this study because you are a member of the Woodbury University community. Your participation in this research study is voluntary.</p>
+<h3>PURPOSE OF THE STUDY</h3>
+<p>The purpose of this study is to evaluate the effectiveness of different types of presentations.  My goal is to better understand how to design presentations by using an eye-tracker tool that records where you are looking on a computer screen.</p>
+<h3>PROCEDURES</h3> 
+<p>If you volunteer to participate in this study, I would ask you to do the following: <br/>
+•	Complete a brief survey<br/>
+•	For each of 5 video-taped presentations<br/>
+o	Watch a 4 minute video <br/>
+o	Complete a brief quiz on the contents of the video<br/>
+o	Complete a brief survey on the presentation<br/>
+•	Answer a number of interview questions about which presentations you liked the most.<br/>
+</p>
+<h3>POTENTIAL RISKS AND DISCOMFORTS</h3>
+<p>There are no potential risks to you.</p>
+<h3>POTENTIAL BENEFITS TO SUBJECTS AND/OR TO SOCIETY</h3>
+<p>You will not financially benefit from your participation in the research.  However, you will expand your understanding of the topics presented, and may be offered extra credit in a course at Woodbury.  The results of the study will be published, and has the potential to improve presentation design.</p>
+<h3>PAYMENT FOR PARTICIPATION</h3>
+<p>You will receive no payment for your participation.</p>
+<h3>CONFIDENTIALITY</h3>
+<p>Any information that is obtained in connection with this study and that can be identified with you will remain confidential and will be disclosed only with your permission or as required by law. Confidentiality will be maintained by means of coding all results, and I will safeguard all data.</p>
+<h3>PARTICIPATION AND WITHDRAWAL</h3>
+<p>You can choose whether to be in this study or not. If you volunteer to be in this study, you may withdraw at any time without consequences of any kind. </p>
+<h3>IDENTIFICATION OF INVESTIGATORS</h3>
+<p>If you have any questions or concerns about the research, please feel free to contact: Nathan Garrett, 818.252.5147, 7500 Glenoaks Blvd, Burbank, CA 91510. </p>
+<h3>RIGHTS OF RESEARCH SUBJECTS </h3>
+<p>You may withdraw your consent at any time and discontinue participation without penalty. You are not waiving any legal rights because of your participation in this research study. If you have questions regarding your rights as a research subject, contact Michael Faber at Woodbury University Institutional Review Board, 7500 Glenoaks Blvd., Burbank, CA 91504, 818-252-5142. </p>
+<h3>SIGNATURE OF RESEARCH SUBJECT </h3>
+<p>I understand the procedures described above. My questions have been answered to my satisfaction, and I agree to participate in this study. I have been given a copy of this form.</p> 
+
+
+
+<form id='ratingform' action="" method="post">
+	{% csrf_token %}
+
+	<h2>Rate your <b>knowledge</b> in the following topics</h2>
+
+	<ul id='ratingul'>
+	{% for field in form.visible_fields %}
+		{% if field.help_text == "Rate your knowledge in the following topics" %}
+		<li>{{ field.label_tag }} {{ field }}  <span class='error'> {{ field.errors }}</span>
+        {% endif %}
+    {% endfor %}
+	</ul>
+
+
+	<h2>Rate your <b>interest</b> in the following topics</h2>
+
+	<ul id='ratingul'>
+	{% for field in form.visible_fields %}
+		{% if field.help_text == "Rate your interest in the following topics" %}
+		<li>{{ field.label_tag }} {{ field }}  <span class='error'> {{ field.errors }}</span>
+        {% endif %}
+    {% endfor %}
+	</ul>
+
+
+	<h2>PowerPoint</h2>
+
+	<ul id='ratingul'>
+	{% for field in form.visible_fields %}
+		{% if field.help_text == "PowerPoint" %}
+		<li>{{ field.label_tag }} {{ field }}  <span class='error'> {{ field.errors }}</span>
+        {% endif %}
+    {% endfor %}
+	</ul>
+
+
+	<div id='ratingsubmit'>
+		<input  type="submit" value="Next page" />
+	</div>
+
+</div>
+
+</form>
+
+{% endblock %}

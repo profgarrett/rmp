@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+
+{% block head %}
+
+<style type='text/css'>
+	.hide {
+		display: none;
+	}
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<h1>View User Presentation {{ ppt.id }} / {{ ppt.filename }}</h1>
+
+
+<h2>Presentation Tags</h2>
+<ul>
+{% for tag in ppt.ppttag_set.all %}
+	<li><a href="{{ tag.get_absolute_url }}">{{ tag.tag }}</a></li>
+{% endfor %}
+</ul>
+
+
+<h2>Units</h2>
+<ul>
+{% for unit in ppt.pptunit_set.all %}
+	<li><a href="{{ unit.get_absolute_url }}">{{ unit.title }}</a>
+		<ul>
+		{% for tag in unit.pptunittag_set.all %}
+			<li><a href="{{ tag.get_absolute_url }}">{{ tag.tag }}</a></li>
+		{% endfor %}
+		</ul>
+	</li>
+{% endfor %}
+</ul>
+
+<button id='playerstart'>Start</button>
+
+<table id='player'>
+	<tr>
+		<td>
+			<video id='playervideo' width="320">
+			  <source src="/static/rating/videos/{{experiment}}.mp4" type="video/mp4">
+			</video>
+		</td>
+		<td id='playerjpgs'>
+			{% for jpg in jpgs  %}
+			<img src="{{ jpg }}" class='hide' width='320' />
+			{% endfor %}
+		</td>
+	</tr>
+</table>
+
+<a href="/experiment/{{experiment}}/{{ppt.id}}/video2">Continue to questions</a>
+
+<script type='text/javascript'>
+	/** 
+		Script to sync up the slides with the movie
+	*/
+	var play = document.getElementById('playerstart'),
+		lasttime = 0, i,
+		video = document.getElementById('playervideo'),
+		transitions = [{{ transitions }}],
+		jpgs = document.getElementById('playerjpgs').children;
+
+	var toggle = function() {
+			if (video.paused) {
+				video.play();
+			} else {
+				video.pause();
+			}
+		};
+
+	play.onclick = toggle;
+	video.onclick = toggle;
+
+	// Track time.
+	video.ontimeupdate = function(event){
+		var now = parseInt(this.currentTime,10);
+		if( now>lasttime) {
+			lasttime = now;
+
+			// Update which jpg is shown.
+			for(i=0; i<=jpgs.length-1; i++) {
+
+				if( transitions[i] <= now && now < transitions[i+1]) {
+					jpgs[i].className='';
+				} else {
+					jpgs[i].className='hide';
+				}
+			}
+		}
+	};
+</script>
+
+{% endblock %}
