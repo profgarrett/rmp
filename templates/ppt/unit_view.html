@@ -15,8 +15,8 @@
 
 <h2>Presentations</h2>
 <ul>
-{% for ppt in unit.ppts.all %}
-	<li><a href="{{ ppt.get_absolute_url }}">{{ ppt.filename }}</a></li>
+{% for ppt in unit.ppt_set.all %}
+	<li><a href="{{ ppt.get_absolute_url }}">{{ ppt.pptfile }}</a></li>
 {% endfor %}
 </ul>
 

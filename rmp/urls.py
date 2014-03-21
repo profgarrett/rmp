@@ -20,13 +20,17 @@ urlpatterns = patterns('',
 urlpatterns += patterns('ppt.views',
     url(r'^$', 'homepage'),
     
-    # User 
+    ## User 
     url(r'^user/$', 'user_list'),
     url(r'^accounts/profile/$', 'user_view'), # current user shortcut from accounts/login
     url(r'^user/(?P<username>\w+)/$', 'user_view'),
+
+    # PPT
     url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/$', 'user_ppt_view'),
     url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/jpg/Slide(?P<slide>\d+)\.JPG$', 'user_ppt_jpg'),
-    url(r'^user/(?P<username>\w+)/ppt/upload$', 'user_ppt_upload'),
+
+    url(r'^user/(?P<username>\w+)/ppt/upload$', 'user_ppt_edit'),
+    url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/edit$', 'user_ppt_edit'),
     
     # Unit    
     url(r'^unit/$', 'unit_list'),

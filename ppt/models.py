@@ -4,6 +4,22 @@ from django.conf import settings
 import os
 
 
+
+class PptUnit(models.Model):
+    UNIT_TYPES = (
+            (u'Experiment', u'Experiment'),
+    )
+    title = models.CharField(max_length=200, db_index=True)
+    unittype = models.CharField(max_length=254, choices=UNIT_TYPES, blank=True)
+    description = models.TextField()
+
+    def get_absolute_url(self):
+        return '/unit/%s/' % (self.id,)
+
+    def __unicode__(self):
+        return "<PptUnit %s, %s >" % (self.id, self.title)
+
+
 class Ppt(models.Model):
     # Processing status
     STATUS = (
@@ -26,14 +42,14 @@ class Ppt(models.Model):
         return 'pptfile/%s/%s/%s' % (self.user_id, self.id, filename[:96] + ext)
 
 
-    title = models.CharField(max_length=240)
-    description = models.TextField()
+    title = models.CharField(max_length=240, default='')
+    description = models.TextField(default='')
     pptfile = models.FileField(upload_to=getuploadedpath)
     jpg_export_status = models.CharField(max_length=1, choices=STATUS, default='0')
-    jpg_export_version = models.SmallIntegerField(blank=True)
+    jpg_export_version = models.SmallIntegerField(default='0')
     
     user = models.ForeignKey(User)
-    
+    pptunit = models.ForeignKey(PptUnit)
 
     def get_absolute_url(self):
         return '/user/%s/ppt/%s/' % (self.user.username, self.id)
@@ -69,22 +85,4 @@ class PptJpg(models.Model):
     
     def __unicode__(self):
         return '<PptJpg %s, %s, %s>' % (self.id, self.filename, self.ppt)
-
-
-
-class PptUnit(models.Model):
-    UNIT_TYPES = (
-            (u'Experiment', u'Experiment'),
-    )
-    title = models.CharField(max_length=200, db_index=True)
-    unittype = models.CharField(max_length=254, choices=UNIT_TYPES, blank=True)
-    description = models.TextField()
-
-    ppts = models.ManyToManyField(Ppt, blank=True)
-
-    def get_absolute_url(self):
-        return '/unit/%s/' % (self.id,)
-
-    def __unicode__(self):
-        return "<PptUnit %s, %s >" % (self.id, self.title)
 

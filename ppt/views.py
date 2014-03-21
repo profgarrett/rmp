@@ -74,6 +74,7 @@ def user_ppt_view(request, username, ppt_id):
             context_instance=RequestContext(request)
     )
 
+
 # Return a jpg image.
 @login_required
 def user_ppt_jpg(request, username, ppt_id, slide):
@@ -90,27 +91,24 @@ def user_ppt_jpg(request, username, ppt_id, slide):
 
 
 @login_required
-def user_ppt_upload(request, username):
-    
-    if request.method == 'POST':
-        
-        pptForm = PptForm(request.POST, request.FILES)
-        
-        if pptForm.is_valid():
-            
-            # Save Ppt record
-            ppt = pptForm.save(commit=False)
-            ppt.user = request.user
-            ppt.save()
-            pptForm.save_m2m()
-            
-            return HttpResponseRedirect(ppt.get_absolute_url())
-        
+def user_ppt_edit(request, username, ppt_id=False):
+    user = User.objects.get(username=request.user)
+    print(ppt_id)
+    if not ppt_id == False:
+        ppt = get_object_or_404(Ppt, id=ppt_id)
     else:
-        pptForm = PptForm()
+        ppt = Ppt(user=user)
+
+    if request.method == 'POST':
+        pptForm = PptForm(request.POST, request.FILES, instance=ppt)
+        if pptForm.is_valid():
+            ppt = pptForm.save()
+            return HttpResponseRedirect(ppt.get_absolute_url())
+    else:
+        pptForm = PptForm(instance=ppt)
     
-    return render_to_response('ppt/upload.html',
-            {'pptForm': pptForm},
+    return render_to_response('ppt/user_ppt_edit.html',
+            {'user': user, 'form': pptForm},
             context_instance=RequestContext(request)
     )
 

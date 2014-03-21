@@ -6,53 +6,16 @@
 
 {% block content %}
 
-<h1>View User {{ user.username }} Presentation {{ ppt.id }} / {{ ppt.filename }}</h1>
-<a href="metadata">meta!</a>
-<h2>Uploaded Files</h2>
-<ul>
-	<li>{{ ppt.id }}</a></li>
+<h1>View User {{ user.username }}'s Presentation {{ ppt.id }} / {{ ppt.file }}</h1>
+
+
+<h2>Unit</h2>
+Part of <a href='{{ ppt.pptunit.get_absolute_url }}'>{{ ppt.pptunit.title }}</a>
 </ul>
-
-
-<h2>Presentation Tags</h2>
-<ul>
-{% for tag in ppt.ppttag_set.all %}
-	<li><a href="{{ tag.get_absolute_url }}">{{ tag.tag }}</a></li>
-{% endfor %}
-</ul>
-
-<h2>Units</h2>
-<ul>
-{% for unit in ppt.pptunit_set.all %}
-	<li><a href="{{ unit.get_absolute_url }}">{{ unit.title }}</a>
-		<ul>
-		{% for tag in unit.pptunittag_set.all %}
-			<li><a href="{{ tag.get_absolute_url }}">{{ tag.tag }}</a></li>
-		{% endfor %}
-		</ul>
-	</li>
-{% endfor %}
-</ul>
-
-
-<h2>Ratings</h2>
-{% for rating in ratings %}
-	<div>User {{ rating.user_id }} rated {{ rating.ppt_id }} presentation on {{ rating.ratedate }}
-	Lengend: 1, Strongly Agree, 2 is Agree, 3 is Neutral, 4 is Disagree, 5 is Strongly Disagree
-	</div>
-	<ul>
-		<li>These slides have a lot of images {{ rating.contentimage }}</br>
-		<li>These slides have a lot of text {{ rating.contenttext }}</br>
-		<li>These slides would help me stay interested during class {{ rating.slidenovel }}</br>
-		<li>These slides would help me prepare for class or study for tests {{ rating.slidestudy }}</br>
-		<li>These slides are professional quality {{ rating.slidequality }}</br>
-		<li>These slides are interesting {{ rating.slideinteresting }}</br>
-	</ul>
-{% endfor %}
 
 
 <h2>Slides</h2>
-{% for jpg in jpgs  %}
+{% for jpg in ppt.pptjpg_set.all  %}
 <img src="{{ jpg }}" />
 {% endfor %}
 
