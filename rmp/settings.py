@@ -120,8 +120,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.admindocs',
-    'south',
-    'rating'
+    'ppt',
+    'exp1',
+#    'rating'
 )
 
 # A sample logging configuration. The only tangible logging
@@ -154,8 +155,8 @@ LOGGING = {
 }
 
 
-try:
-    from local_settings import *
-except ImportError:
-    pass
+#try:
+from rmp.local_settings import *
+#except ImportError:
+#    pass
 

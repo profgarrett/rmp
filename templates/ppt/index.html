@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if user %}
+	Hello {{ user.username }}.  Would you like <a href='/experiment/pre'>start the experiment</a>?
+{% else %}
+	<a href="/accounts/login">Please log in</a> to upload or review slides.
+{% endif %}
+
+{% endblock %}

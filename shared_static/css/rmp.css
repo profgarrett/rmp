@@ -1,0 +1,94 @@
+/** 
+	Main display code for the rmp website
+
+*/
+
+
+/**
+	Main html and page elements
+**/
+
+html {
+
+} 
+
+html, body {
+	padding: 0px;
+	border: none;
+	margin: 0px;
+}
+
+body {
+	background-color: #240100; /* dk purple */
+	color: #EFE5C9; /* coffee */
+}
+
+a:link, a:visited, a:active {
+	color:#EFE5C9;
+}
+a:hover {
+	color:#EFE5C9;
+}
+
+
+table {
+	border-collapse: collapse;
+}
+
+/**
+	Useful classes
+
+**/
+
+
+/**
+	General page display elements
+**/
+
+#header {
+	background-color: #746557; /* mid color */
+	color: #240100; /* purple */
+	text-align: left;
+}
+
+
+#header #logo {
+	float: left;
+	margin: 5px;
+}
+#header #logout {
+	float: right;
+	margin: 5px;
+	text-decoration: underline;
+}
+#header a:link, #header a:visited, #header a:active {
+	text-decoration: none;
+}
+#header a:hover {
+	color:#EFE5C9;
+}
+
+
+#header #menu {
+	clear: both;
+	width: 100%;
+	background-color: #560202; /* red */
+	color: #0C0000; /* black */
+}
+#header #menu td {
+	width: 25%;
+	vertical-align: middle;
+	text-align: center;
+	text-decoration: underline;
+	line-height: 200%;
+}
+
+
+
+#content {
+	margin: 10px;
+}
+
+#sidebar {
+	margin: 10px;
+}

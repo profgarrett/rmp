@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+<h1>View Unit {{ unit.title }}</h1>
+
+<ul>
+	<li>Type: {{ unit.unittype }}</li>
+	<li>Description: {{ unit.description }}</li>
+</ul>
+
+<h2>Presentations</h2>
+<ul>
+{% for ppt in unit.ppts.all %}
+	<li><a href="{{ ppt.get_absolute_url }}">{{ ppt.filename }}</a></li>
+{% endfor %}
+</ul>
+
+
+{% endblock %}

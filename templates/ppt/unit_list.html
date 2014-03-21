@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Units</h1>
+
+<ul>
+{% for unit in units %}
+	<li><a href="/unit/{{ unit.pk }}">{{ unit.title }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock %}
