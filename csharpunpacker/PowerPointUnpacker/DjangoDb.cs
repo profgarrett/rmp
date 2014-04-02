@@ -12,7 +12,6 @@ using MySql.Data.MySqlClient;
 */
 
 
-
 namespace PowerPointUnpacker
 {
     class DjangoDb
@@ -77,26 +76,32 @@ namespace PowerPointUnpacker
             string sql = "UPDATE ppt_ppt " +
                     " SET jpg_export_status = '" + pptFile.exported_to_jpg + "' " +
                     " WHERE id = " + pptFile.id;
-            System.IO.FileInfo file;
-            System.Drawing.Bitmap img;
 
             //MySqlCommand cmd = new MySqlCommand(sql, myCon);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, myCon);
             cmd.ExecuteNonQuery();
 
+            // Now update jpg files.
+            this.UpdatePptJpgs(pptFile);
+        }
+
+        private void UpdatePptJpgs(Ppt pptFile) {
             // Remove all old jpg images.
-            sql = "DELETE ppt_pptjpg WHERE ppt_id = " + pptFile.id;
-            cmd = new NpgsqlCommand(sql, myCon);
+            string sql = "DELETE FROM ppt_pptjpg WHERE ppt_id = " + pptFile.id;
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, myCon);
             cmd.ExecuteNonQuery();
 
-            for(int i = 1; i<=slide_count; i++){
-                file = new System.IO.FileInfo(pptFile.get_absolute_path());
-
-                file_size = System.IO.File.Open(config., System.IO.
-                sql = "INSERT INTO ppt_pptjpg (filename, size, height, width, ppt_id) VALUES ('Slide"+i.ToString()+".jpg', "+
-                    "
-                        
+            // Add each into the db again.
+            Stack<PptJpg> st = pptFile.getJpgsFromFileSystem();
+            foreach(PptJpg pptJpg in st) {
+                sql = "INSERT INTO ppt_pptjpg (filename, size, height, width, ppt_id) VALUES ('" +
+                    pptJpg.filename + "', " + pptJpg.size.ToString() + ", " + pptJpg.height.ToString() + ", " +
+                    pptJpg.width.ToString() + ", " + pptFile.id.ToString() + ")";
+                cmd = new NpgsqlCommand(sql, myCon);
+                cmd.ExecuteNonQuery();
+            }
         }
+
 
         public void Close()
         {

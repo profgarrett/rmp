@@ -50,8 +50,8 @@ namespace PowerPointUnpacker
             string folder = "";
             string filename = "";
 
-            folder = Path.GetDirectoryName(this.ppt.get_absolute_path().Replace("/", @"\"););
-            filename = Path.GetFileName(this.ppt.get_absolute_path().Replace("/", @"\"););
+            folder = Path.GetDirectoryName(this.ppt.get_absolute_path().Replace("/", @"\"));
+            filename = Path.GetFileName(this.ppt.get_absolute_path().Replace("/", @"\"));
 
             try
             {

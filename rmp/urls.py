@@ -48,3 +48,9 @@ urlpatterns += patterns('exp1.views',
 ## Static file patterns.
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 urlpatterns += staticfiles_urlpatterns()
+
+## Media
+from django.conf.urls.static import static
+from rmp.local_settings import MEDIA_URL, MEDIA_ROOT
+
+urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)
