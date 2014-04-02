@@ -16,7 +16,7 @@ class PptUnit(models.Model):
     def get_absolute_url(self):
         return '/unit/%s/' % (self.id,)
 
-    def __unicode__(self):
+    def __str__(self):
         return "<PptUnit %s, %s >" % (self.id, self.title)
 
 
@@ -57,8 +57,8 @@ class Ppt(models.Model):
     def get_absolute_filepath(self):
         return '%suserfiles/%s' % (settings.PPT_FILEPATH, self.file.name)
     
-    def __unicode__(self):
-        return "<Ppt %s, %s >" % (self.id, self.file.name)
+    def __str__(self):
+        return "<Ppt %s, %s, %s>" % (self.id, self.title, self.pptfile)
 
 
 # Model for storing results jpg generated files
@@ -81,8 +81,8 @@ class PptJpg(models.Model):
         if user == None:
             user = self.ppt.user
         
-        return "/user/%s/ppt/%s/jpg/%s" % (user.username, self.ppt_id, self.filename)
+        return "/media/pptfile/%s/jpg_%s/%s" % (user.id, self.ppt_id, self.filename)
     
-    def __unicode__(self):
+    def __str__(self):
         return '<PptJpg %s, %s, %s>' % (self.id, self.filename, self.ppt)
 

@@ -8,7 +8,6 @@ from ppt.models import *
 
 class PptInitialSurvey1(models.Model):
     INFORM_CHOICES = (
-        (0, u''),
         (1, u'Very Uninformed'),
         (2, u'Moderately Uninformed'),
         (3, u'Slightly Uninformed'),
@@ -28,7 +27,6 @@ class PptInitialSurvey1(models.Model):
     )
 
     AGREE7_CHOICES = (
-        (0, u''),
         (1, u'Strongly Disagree'),
         (2, u'Moderately Disagree'),
         (3, u'Slightly Disagree'),
@@ -72,13 +70,12 @@ class PptInitialSurvey1(models.Model):
     def get_absolute_url(self):
         return '/survey/PptInitialSurvey1/$s' % (self.id)
     
-    def __unicode__(self):
-        return "<PptInitialSurvey1 ('%s', '%s' )" % (self.id, self.ppt)
+    def __str__(self):
+        return "<PptInitialSurvey1 (%s, %s, %s )" % (self.id, self.ratedate, self.user.username)
 
 
 class PptPostSlideSurvey1(models.Model):
     AVERAGE5_CHOICES = (
-        (0, u''),
         (1, u'Poor'),
         (2, u'Below Average'),
         (3, u'Average'),
@@ -87,7 +84,6 @@ class PptPostSlideSurvey1(models.Model):
     )
 
     ALWAYS5_CHOICES = (
-        (0, u''),
         (1, u'Hardly ever'),
         (2, u'Occasionally'),
         (3, u'Sometimes'),
@@ -107,7 +103,6 @@ class PptPostSlideSurvey1(models.Model):
     )
 
     EFFECTIVE6_CHOICES = (
-        (0, u''),
         (1, u'Very infeffective'),
         (2, u'Moderately infeffective'),
         (3, u'Slightly Ineffective'),
@@ -117,7 +112,6 @@ class PptPostSlideSurvey1(models.Model):
     )
 
     EFFECTIVE7_CHOICES = (
-        (0, u''),
         (1, u'Very infeffective'),
         (2, u'Moderately infeffective'),
         (3, u'Slightly Ineffective'),
@@ -152,8 +146,8 @@ class PptPostSlideSurvey1(models.Model):
     def get_absolute_url(self):
         return '/survey/PptPostSlideSurvey1/$s' % (self.id)
     
-    def __unicode__(self):
-        return "<PptPostSlideSurvey1 ('%s', '%s' )" % (self.id, self.user)
+    def __str__(self):
+        return "<PptPostSlideSurvey1 ('%s', '%s', %s )" % (self.id, self.user.username, self.ppt.filename)
 
 
 class PptTopicA(models.Model):

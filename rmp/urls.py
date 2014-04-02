@@ -27,8 +27,6 @@ urlpatterns += patterns('ppt.views',
 
     # PPT
     url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/$', 'user_ppt_view'),
-    url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/jpg/Slide(?P<slide>\d+)\.JPG$', 'user_ppt_jpg'),
-
     url(r'^user/(?P<username>\w+)/ppt/upload$', 'user_ppt_edit'),
     url(r'^user/(?P<username>\w+)/ppt/(?P<ppt_id>\d+)/edit$', 'user_ppt_edit'),
     

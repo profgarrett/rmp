@@ -26,7 +26,38 @@ Download RMP files to the folder where you want to run them from.
 	pip install Django
 	pip install Pillow  <-- note you need the binary on windows
 
-Third, configure localsettings.py file for database setup.  Use the example template provided as a starting point.
+* Configure localsettings.py file for database setup.  Use the example template provided as a starting point.
+
+* Configure Apache.  Following is a sample configuration to attach to http.conf
+
+Alias /robots.txt "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/shared_static/robots.txt"
+Alias /favicon.ico "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/shared_static/favicon.ico"
+
+AliasMatch ^/([^/]*\.css) "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/shared_static/styles/$1"
+
+Alias /media/ "E:/rmp2/ppts/"
+Alias /static/ "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/shared_static/"
+
+<Directory "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/shared_static">
+Order deny,allow
+Allow from all
+</Directory>
+
+<Directory "e:/rmp2/ppts/">
+Order deny,allow
+Allow from all
+</Directory>
+
+WSGIScriptAlias / "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/rmp/wsgi.py"
+WSGIPythonPath "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/"
+
+<Directory "C:/Program Files (x86)/Apache Software Foundation/Apache2.2/htdocs/rmp/">
+<Files wsgi.py>
+Order deny,allow
+Allow from all
+</Files>
+</Directory>
+
 
 
 Other Notes

@@ -75,20 +75,6 @@ def user_ppt_view(request, username, ppt_id):
     )
 
 
-# Return a jpg image.
-@login_required
-def user_ppt_jpg(request, username, ppt_id, slide):
-    user = get_object_or_404(User, username=username)
-    if '..' in slide or '..' in ppt_id:
-        raise Http404
-
-    filepath = '%suserfiles/pptfile/%s/jpg_%s/%s' % (settings.PPT_FILEPATH, user.id, ppt_id, slide)
-    try:
-        f = open(filepath, 'rb')
-        return HttpResponse(f.read())
-    except:
-        raise Http404
-
 
 # Note that this both uploads new files and allows edits.
 @login_required

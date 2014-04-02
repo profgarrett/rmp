@@ -101,3 +101,8 @@ table {
 	margin: 30px 10px;
 	text-align: center;
 }
+
+
+li > label {
+	color: #0C0000;
+}

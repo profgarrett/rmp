@@ -16,7 +16,7 @@ Part of <a href='{{ ppt.pptunit.get_absolute_url }}'>{{ ppt.pptunit.title }}</a>
 
 <h2>Slides</h2>
 {% for jpg in ppt.pptjpg_set.all  %}
-<img src="{{ jpg.get_absolute_url }}" />
+<img src="{{ jpg.get_absolute_url }}" width=200px />
 {% endfor %}
 
 
