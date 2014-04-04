@@ -67,3 +67,4 @@ Other Notes
 Credits
 ===========
 Thanks to HTML5 Boilerplate project.  I used modified versions of their files (loaded in shared_static).
+Thanks to swfobject project.  I use the js embed option for Youtube videos.

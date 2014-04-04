@@ -30,7 +30,7 @@ def ppt_survey_pre(request):
             unit = PptUnit.objects.filter(title='2014 Summer Experiment A')[0]
             ppt = unit.ppt_set.all()[random.randint(0,1)]
 
-            return HttpResponseRedirect('/experiment/A/%s/video1' % (ppt.id))
+            return HttpResponseRedirect('/exp1/A/%s/video1' % (ppt.id))
     else:
         form = PptInitialSurvey1()
     
@@ -45,18 +45,25 @@ def ppt_survey_video1(request, experiment, ppt_id):
 
     if experiment == 'A':
         transitions = "0, 14, 51, 100, 162, 189, 242, 999"
+        youtube = '-0LuDdnjvLc'
     elif experiment == 'B':
-        transitions = "0, 19, 43, 105, 140, 186, 224, 999"
+        transitions = "0, 19, 43, 105, 140, 186, 211, 999"
+        youtube = '8NyIv47tIEM'
     elif experiment == 'C':
         transitions = "0, 15, 62, 110, 131, 155, 220, 999"
+        youtube = 'tG8VzFBy6Ew'
     elif experiment == 'D':
         transitions = "0, 18, 61, 101, 170, 206, 234, 999"
+        youtube = 'fPiLAX3piB8'
     elif experiment == 'E':
         transitions = "0, 11, 37, 85, 148, 194, 210, 999"
+        youtube = 'sNa0uiZVrA8'
 
     return render_to_response('exp1/survey_video1.html',
             {   'ppt': ppt, 
+                'jpgs': ppt.pptjpg_set.all().order_by('filename'),
                 'transitions': transitions,
+                'youtube': youtube,
                 'experiment': experiment
             },
             context_instance=RequestContext(request))
@@ -101,12 +108,12 @@ def ppt_survey_video2(request, experiment, ppt_id):
             new_rating.ppt = ppt
             new_rating.save()
 
-            # Find a random falling into next experiment & goto it (unles we're done!)
+            # Find a random falling into next experiment & goto it (unless we're done!)
             if nextexperiment=='Z':
                 return HttpResponseRedirect('/exp1/thanks.html')
             else:
                 unit = PptUnit.objects.filter(title='2014 Summer Experiment '+nextexperiment)[0]
-                ppt = unit.ppts.all()[random.randint(0,1)]
+                ppt = unit.ppt_set.all()[random.randint(0,1)]
                 return HttpResponseRedirect('/exp1/%s/%s/video1' % (nextexperiment, ppt.id))
     else:
         form1 = form1()
@@ -124,5 +131,5 @@ def ppt_survey_video2(request, experiment, ppt_id):
 @login_required
 def ppt_survey_post(request):
 
-    return render_to_response('rating/survey_post.html',{},
+    return render_to_response('exp1/survey_post.html',{},
             context_instance=RequestContext(request))    

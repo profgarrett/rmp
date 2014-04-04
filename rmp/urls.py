@@ -14,8 +14,6 @@ urlpatterns = patterns('',
     #url(r'^registration/password_reset', 'django.contrib.auth.views.password_reset'),
 )
 
-
-
 ## Core PPT uploading and management.
 urlpatterns += patterns('ppt.views',
     url(r'^$', 'homepage'),
@@ -35,13 +33,22 @@ urlpatterns += patterns('ppt.views',
     url(r'^unit/(?P<unit_id>\w+)/$', 'unit_view'),
 )
 
-## Survey for 2014 Summer Experiment
+## Survey for 2014 Summer Experiment with eye tracker.
 urlpatterns += patterns('exp1.views',
-    url(r'^experiment/pre$', 'ppt_survey_pre'),
-    url(r'^experiment/(?P<experiment>\w)/(?P<ppt_id>\d+)/video1$', 'ppt_survey_video1'),
-    url(r'^experiment/(?P<experiment>\w)/(?P<ppt_id>\d+)/video2$', 'ppt_survey_video2'),
-    url(r'^experiment/thanks.html$', 'ppt_survey_post'),
+    url(r'^exp1/pre$', 'ppt_survey_pre'),
+    url(r'^exp1/(?P<experiment>\w)/(?P<ppt_id>\d+)/video1$', 'ppt_survey_video1'),
+    url(r'^exp1/(?P<experiment>\w)/(?P<ppt_id>\d+)/video2$', 'ppt_survey_video2'),
+    url(r'^exp1/thanks.html$', 'ppt_survey_post'),
 )
+
+## Survey for 2014 Summer Experiment with turk.
+urlpatterns += patterns('exp2_turk.views',
+    url(r'^exp2_turk/pre$', 'ppt_survey_pre'),
+    url(r'^exp2_turk/(?P<ppt_id>\d+)/video1$', 'ppt_survey_video1'),
+    url(r'^exp2_turk/(?P<ppt_id>\d+)/video2$', 'ppt_survey_video2'),
+    url(r'^exp2_turk/thanks.html$', 'ppt_survey_post'),
+)
+
 
 ## Static file patterns.
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns

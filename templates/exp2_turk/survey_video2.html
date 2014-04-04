@@ -8,8 +8,6 @@
 
 
 <script type="text/javascript">
-// Using JQuery selectors to add onFocus and onBlur event handlers
-
 $(document).ready( function() {}
 
 
@@ -64,10 +62,8 @@ $(document).ready( function() {}
 <form id='x' action="" method="post">
 	{% csrf_token %}
 	<ul id='ratingul'>
-		<h3>PowerPoint Questions</h3>
+		<h3>Questions</h3>
 		{{ form1.as_ul }}
-		<h3>Content Questions</h3>
-		{{ form2.as_ul }}
 	</ul>
 
 	<div id='ratingsubmit'>

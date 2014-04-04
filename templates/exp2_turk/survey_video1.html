@@ -35,14 +35,9 @@
 			{% endfor %}
 		</td>
 		<td id='videocontent'>
-		<!-- Local hosting
-			<video id='playervideo' width="320">
-			  <source src="/static/rating/videos/{{experiment}}.mp4" type="video/mp4">
-			</video>
-		-->
 
 			<div id="ytapiplayer">
-			You need Flash player 8+ and JavaScript enabled to view this video.
+				You need Flash player 8+ and JavaScript enabled to view this video.
 			</div>
 
 		</td>
@@ -50,7 +45,7 @@
 </table>
 
 
-<a id='nextplayer' class='hide' href="/exp1/{{experiment}}/{{ppt.id}}/video2">Continue to questions</a>
+<a id='nextplayer' class='hide' href="/exp2_turk/{{ppt.id}}/video2">Continue to questions</a>
 
  <script type="text/javascript">
  	// Hide elements that shouldnt' be shown.
@@ -73,28 +68,9 @@
 	// Run once the youtube player finishes loading
 	function onYouTubePlayerReady(playerId) {
     	ytplayer = document.getElementById("myytplayer");
-    	//player.addEventListener("onStateChange", "onytplayerStateChange");
     	document.getElementById('playvideo').className = '';
 		document.getElementById('playerjpgs').className = "";
     }
-
-    /*
-    document.getElementById('playvideo').onclick = function(){
-
-		ytplayer.playVideo();
-		ytplayer.unMute();
-		ytplayer.setVolume(100);
-		this.className='hide';
-    };
-	*/
-	
-    /* Run whenever the player hits a new position.
-	function onytplayerStateChange(newState) {
-	 	var next = document.getElementById('nextplayer');
-		alert("Player's new state: " + newState);
-    	next.style.display = 'Block';
-	}
-	*/
 
 	// Code to run every .1s to manage timing of slides.
 	function refreshJpgs() {
@@ -129,48 +105,5 @@
 	window.setInterval(refreshJpgs, 100);
 
   </script>
-
-
-<script type='text/javascript'>
-	/**	Local Hosting 
-
-		Script to sync up the slides with the movie
-	
-	var play = document.getElementById('playerstart'),
-		lasttime = 0, i,
-		video = document.getElementById('playervideo'),
-		transitions = [{{ transitions }}],
-		jpgs = document.getElementById('playerjpgs').children;
-
-	var toggle = function() {
-			if (video.paused) {
-				video.play();
-			} else {
-				video.pause();
-			}
-		};
-
-	play.onclick = toggle;
-	video.onclick = toggle;
-
-	// Track time.
-	video.ontimeupdate = function(event){
-		var now = parseInt(this.currentTime,10);
-		if( now>lasttime) {
-			lasttime = now;
-
-			// Update which jpg is shown.
-			for(i=0; i<=jpgs.length-1; i++) {
-
-				if( transitions[i] <= now && now < transitions[i+1]) {
-					jpgs[i].className='';
-				} else {
-					jpgs[i].className='hide';
-				}
-			}
-		}
-	};
-	*/
-</script>
 
 {% endblock %}
